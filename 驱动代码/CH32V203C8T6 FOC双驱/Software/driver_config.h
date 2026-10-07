@@ -113,13 +113,14 @@
 
 /**************************** 数据回传 ****************************/
 #define  DATA_PRINTF					DRIVER_ENABLE				// 回传数据总使能开关
+
 #define  ANGLE_PRINTF				    DRIVER_DISABLE				// 磁编数据回传
 #define  VECOCITY_PRINTF				DRIVER_ENABLE				// 回传速度
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
-#define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传
+#define  I_Q_I_D_PRINTF					DRIVER_DISABLE				// i_q,i_d数据回传
 #define  BATTERY_PRINTF					DRIVER_DISABLE				// 电池电压回传
-#define  TIME_PRINTF					DRIVER_ENABLE				// 单次执行周期回传
+#define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
 /**************************** 数据回传 ****************************/
 
 
