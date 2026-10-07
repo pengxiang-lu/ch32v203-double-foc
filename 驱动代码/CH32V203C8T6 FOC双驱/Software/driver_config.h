@@ -91,7 +91,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							VECOCITY_CURRENT_LOOP_MODE
+#define FOC_MODE 							VECOCITY_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
