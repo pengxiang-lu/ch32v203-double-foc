@@ -6,8 +6,8 @@
 
 #elif FOC_MODE == VECOCITY_LOOP_MODE
 // 速度环参数
-#define LEFT_VELOCITY_KP            2.00                //Kp
-#define LEFT_VELOCITY_KI            0.12                //Ki
+#define LEFT_VELOCITY_KP            1.00                //Kp
+#define LEFT_VELOCITY_KI            0.10                //Ki
 
 #elif FOC_MODE == ANGLE_VECOCITY_LOOP_MODE
 // 速度环参数
@@ -98,13 +98,13 @@ int32_t p_controller(pid_struct * pid_p,int32_t error)
 // 计算变换后的参数
 void pid_parama_transform(motor_struct * motor_p)
 {
-    motor_p->angle_pid_struct.p_t     = (int32_t)(left_motor.angle_pid_struct.p*65536);
-    motor_p->vecocity_pid_struct.p_t  = (int32_t)(left_motor.vecocity_pid_struct.p*65536);
-    motor_p->vecocity_pid_struct.i_t  = (int32_t)(left_motor.vecocity_pid_struct.i*65536);
-    motor_p->i_q_pid_struct.p_t       = (int32_t)(left_motor.i_q_pid_struct.p*65536);
-    motor_p->i_q_pid_struct.i_t       = (int32_t)(left_motor.i_q_pid_struct.i*65536);
-    motor_p->i_d_pid_struct.p_t       = (int32_t)(left_motor.i_d_pid_struct.p*65536);
-    motor_p->i_d_pid_struct.i_t       = (int32_t)(left_motor.i_d_pid_struct.i*65536);
+    motor_p->angle_pid_struct.p_t     = (int32_t)(motor_p->angle_pid_struct.p*65536);
+    motor_p->vecocity_pid_struct.p_t  = (int32_t)(motor_p->vecocity_pid_struct.p*65536);
+    motor_p->vecocity_pid_struct.i_t  = (int32_t)(motor_p->vecocity_pid_struct.i*65536);
+    motor_p->i_q_pid_struct.p_t       = (int32_t)(motor_p->i_q_pid_struct.p*65536);
+    motor_p->i_q_pid_struct.i_t       = (int32_t)(motor_p->i_q_pid_struct.i*65536);
+    motor_p->i_d_pid_struct.p_t       = (int32_t)(motor_p->i_d_pid_struct.p*65536);
+    motor_p->i_d_pid_struct.i_t       = (int32_t)(motor_p->i_d_pid_struct.i*65536);
 
     if(FOC_MODE == ANGLE_LOOP_MODE)
     {
@@ -222,7 +222,7 @@ void pid_parama_init()
 #ifdef  RIGHT_ANGLE_KP
             RIGHT_ANGLE_KP;
 #else
-            0;
+            left_motor.angle_pid_struct.p;
 #endif
 
     // 速度环参数
@@ -230,7 +230,7 @@ void pid_parama_init()
 #ifdef  RIGHT_VELOCITY_KP
             RIGHT_VELOCITY_KP;
 #else
-            0;
+            left_motor.vecocity_pid_struct.p;
 #endif
 
 
@@ -238,7 +238,7 @@ void pid_parama_init()
 #ifdef  RIGHT_VELOCITY_KI
             RIGHT_VELOCITY_KI;
 #else
-            0;
+            left_motor.vecocity_pid_struct.i;
 #endif
 
     // i_q环参数
@@ -246,14 +246,14 @@ void pid_parama_init()
 #ifdef  RIGHT_I_Q_KP
             RIGHT_I_Q_KP;
 #else
-            0;
+            left_motor.i_q_pid_struct.p;
 #endif
 
     right_motor.i_q_pid_struct.i         =
 #ifdef  RIGHT_I_Q_KI
             RIGHT_I_Q_KI;
 #else
-            0;
+            left_motor.i_q_pid_struct.i;
 #endif
 
 
@@ -262,14 +262,14 @@ void pid_parama_init()
 #ifdef  RIGHT_I_D_KP
             RIGHT_I_D_KP;
 #else
-            0;
+            left_motor.i_d_pid_struct.p;
 #endif
 
     right_motor.i_d_pid_struct.i         =
 #ifdef  RIGHT_I_D_KI
             RIGHT_I_D_KI;
 #else
-            0;
+            left_motor.i_d_pid_struct.i;
 #endif
 
     pid_parama_transform(&right_motor);
