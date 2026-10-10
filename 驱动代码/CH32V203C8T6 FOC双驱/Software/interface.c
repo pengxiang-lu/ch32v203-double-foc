@@ -33,7 +33,7 @@ void interface_init()
     right_motor.encoder_struct.magnetic_encoder_read   = R_MT6701_GetRawAngle;
     // 电流环相关底层函数
     right_motor.current_struct.inline_current_read_adc = right_inline_current_read_adc;
-    right_motor.current_struct.inline_current_adc_init = motor_null;
+    right_motor.current_struct.inline_current_adc_init = current_sensor_adc_init;
     // LED指示灯相关函数
     right_motor.led_struct.led_toggle = right_led_toggle;
     right_motor.led_struct.led_init   = right_led_init;

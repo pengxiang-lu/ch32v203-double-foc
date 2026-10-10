@@ -389,7 +389,7 @@ void motor_callback(motor_struct * motor_p)
 
 
 void TIM1_UP_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-// 定时器2中断服务函数
+// 定时器1中断服务函数
 void TIM1_UP_IRQHandler(void)
 {
     // 检查TIM1的更新中断标志位

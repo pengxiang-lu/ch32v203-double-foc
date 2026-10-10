@@ -3,6 +3,12 @@ uint16_t adc_value[5];
 // ADC输入脚:I_A->PA0,I_B->PA1,IC->PA7,这里默认初始化三路电流传感器
 void current_sensor_adc_init()
 {
+	static uint8_t adc_initialized = 0;
+	if (adc_initialized)
+	{
+		return;
+	}
+
   	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);	//开启ADC1的时钟
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);	//开启GPIOA的时钟
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);		//开启DMA1的时钟
@@ -62,6 +68,7 @@ void current_sensor_adc_init()
 	
 	/*ADC触发*/
 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);	                //软件触发ADC开始工作，由于ADC处于连续转换模式，故触发一次后ADC就可以一直连续不断地工作
+	adc_initialized = 1;
 }
 void battery_adc_init() 
 {
