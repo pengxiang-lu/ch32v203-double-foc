@@ -84,7 +84,7 @@ A5 03 E8 FC 18 A4
 ```
 
 ## 编译与下载
-
+0. 第一次使用的时候(这时候芯片flash里面没东西)记得在driver_config.h里面把FIRST_USE改为YES，烧录程序(烧录程序配置不能设置为全片擦除),然后再把FIRST_USE改为NO后再烧录回去即可。
 1. 安装与该工程兼容的 MounRiver Studio（工程生成文件标记 MRS 1.9.2）。
 2. 在 MounRiver Studio 中导入 `驱动代码/CH32V203C8T6 FOC双驱/Double_FOC.wvproj`。
 3. 检查 `Software/driver_config.h` 中的电机使能、控制模式、电流采样类型和保护选项；根据电机及板卡实测参数校准 PID、极对数、方向和零点。

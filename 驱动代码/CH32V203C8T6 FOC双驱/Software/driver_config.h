@@ -27,7 +27,7 @@
 #define DRIVER_DISABLE                 	(0)             // 失能
 #define NO                              (0)             // 否
 /**************************** 电机配置 ****************************/
-#define LEFT_MOTOR_STATE            DRIVER_ENABLE
+#define LEFT_MOTOR_STATE            DRIVER_DISABLE
 #define RIGHT_MOTOR_STATE           DRIVER_ENABLE
 // PWM重装值配置
 #define MOTOR_DUTY_BIT				12								// 满占空比位数
