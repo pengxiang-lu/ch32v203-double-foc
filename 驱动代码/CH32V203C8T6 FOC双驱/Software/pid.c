@@ -161,6 +161,7 @@ void pid_parama_init()
 	left_motor.angle_pid_struct.p 		=
 #ifdef  LEFT_ANGLE_KP
 	        LEFT_ANGLE_KP;
+
 #else
 	        0;
 #endif

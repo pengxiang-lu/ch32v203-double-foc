@@ -92,15 +92,15 @@ void motor_phase_check(motor_struct * motor_p)
     
     // 第二声  B相上桥 → C相下桥
     check_period = 35000;                       // 2.285khz
-    
+
     motor_p->motor_output_init(check_period);
-    
+
     motor_p->motor_set_duty(0, check_period / 50, 0);
-    
+
     delay_ms(delay_time);
-    
+
     motor_p->motor_set_duty(0, 0, 0);
-    
+
     delay_ms(50);
     
     // 第三声  C相上桥 → A相下桥
@@ -301,8 +301,10 @@ void motor_callback(motor_struct * motor_p)
 	{
 	    motor_p->speed_observe_count = 0;
 		
-		motor_p->motor_speed = -motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;   // 速度数据拟合,单位RPM(转每分钟),要注意方向，正力矩正方向为正方向
-		
+		// motor_p->motor_speed = motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO*motor_p->rotation_direction;   // 速度数据拟合,单位RPM(转每分钟),要注意方向，正力矩正方向为正方向
+		// 因为力矩正方向和磁编正方向是一致的
+	    motor_p->motor_speed = - motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;
+
 		motor_p->motor_speed_filter = (motor_p->motor_speed_filter*19+motor_p->motor_speed)/20;			                // 速度数据低通滤波
 		
 		motor_p->motor_angle += motor_p->rotation_direction*motor_p->encoder_struct.encoder_offset_integral;			// 角度的计算,需要带上方向
@@ -395,12 +397,11 @@ void TIM1_UP_IRQHandler(void)
     // 检查TIM1的更新中断标志位
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET)
     {
-#if RIGHT_MOTOR_STATE    ==     DRIVER_ENABLE
-        motor_callback(&right_motor);
-#endif
-
 #if LEFT_MOTOR_STATE    ==     DRIVER_ENABLE
         motor_callback(&left_motor);
+#endif
+#if RIGHT_MOTOR_STATE    ==     DRIVER_ENABLE
+        motor_callback(&right_motor);
 #endif
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
     }
