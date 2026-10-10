@@ -27,7 +27,7 @@
 #define DRIVER_DISABLE                 	(0)             // 失能
 #define NO                              (0)             // 否
 /**************************** 电机配置 ****************************/
-#define LEFT_MOTOR_STATE            DRIVER_DISABLE
+#define LEFT_MOTOR_STATE            DRIVER_ENABLE
 #define RIGHT_MOTOR_STATE           DRIVER_ENABLE
 // PWM重装值配置
 #define MOTOR_DUTY_BIT				12								// 满占空比位数
@@ -54,7 +54,7 @@
 
 /************************* 电流传感器配置 *************************/
 // 采样基本参数配置
-#define CURRENT_SENSOR						DRIVER_ENABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
+#define CURRENT_SENSOR						DRIVER_DISABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
 #define SHUNT_RESISTER						0.01			// 分流电阻,单位为Ω
 #define GAIN								20				// 放大倍数
 #define ADC_REF_VOLTAGE 					3.3           	// ADC电压,单位为V

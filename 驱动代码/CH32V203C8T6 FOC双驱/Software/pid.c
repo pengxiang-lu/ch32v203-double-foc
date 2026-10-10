@@ -7,7 +7,7 @@
 #elif FOC_MODE == VECOCITY_LOOP_MODE
 // 速度环参数
 #define LEFT_VELOCITY_KP            1.00                //Kp
-#define LEFT_VELOCITY_KI            0.10                //Ki
+#define LEFT_VELOCITY_KI            0.1                 //Ki
 
 #elif FOC_MODE == ANGLE_VECOCITY_LOOP_MODE
 // 速度环参数

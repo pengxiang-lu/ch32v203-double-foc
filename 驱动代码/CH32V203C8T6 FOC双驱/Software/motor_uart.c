@@ -73,8 +73,7 @@ void motor_uart_data_callback()
 //	#if TIME_PRINTF == DRIVER_ENABLE
 //		printf("%d",left_motor.single_calculation_use_time);
 //	#endif
-
-	printf("0\r\n");
+	printf("%d\r\n",left_motor.rotation_direction);
 #endif
 }
 void motor_driver_fifo_clear(uint32_t clear_length)

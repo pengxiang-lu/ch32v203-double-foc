@@ -255,7 +255,7 @@ void motor_foc_control_init(motor_struct * motor_p)
     #else
     motor_p->read_flash();
     #endif
-    foc_init(&motor_p->foc_cal_struct,motor_p->pole_pairs, motor_p->zero_location, motor_p->rotation_direction);     // 左侧电机 FAST_FOC 功能初始化
+    foc_init(&motor_p->foc_cal_struct,motor_p->pole_pairs, motor_p->zero_location, motor_p->rotation_direction);     // 电机 FAST_FOC 功能初始化
     
     motor_p->motor_output_init(PWM_PRIOD_LOAD);     			// 电机三相 PWM 输出初始化
 
@@ -301,7 +301,7 @@ void motor_callback(motor_struct * motor_p)
 	{
 	    motor_p->speed_observe_count = 0;
 		
-		motor_p->motor_speed = (int32_t)(motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO)*motor_p->rotation_direction;   // 速度数据拟合,单位RPM(转每分钟),要注意方向，正力矩正方向为正方向
+		motor_p->motor_speed = -motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;   // 速度数据拟合,单位RPM(转每分钟),要注意方向，正力矩正方向为正方向
 		
 		motor_p->motor_speed_filter = (motor_p->motor_speed_filter*19+motor_p->motor_speed)/20;			                // 速度数据低通滤波
 		
@@ -395,11 +395,12 @@ void TIM1_UP_IRQHandler(void)
     // 检查TIM1的更新中断标志位
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET)
     {
-#if LEFT_MOTOR_STATE    ==     DRIVER_ENABLE
-        motor_callback(&left_motor);
-#endif
 #if RIGHT_MOTOR_STATE    ==     DRIVER_ENABLE
         motor_callback(&right_motor);
+#endif
+
+#if LEFT_MOTOR_STATE    ==     DRIVER_ENABLE
+        motor_callback(&left_motor);
 #endif
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
     }
