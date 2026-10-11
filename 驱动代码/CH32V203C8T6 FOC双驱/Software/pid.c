@@ -29,8 +29,8 @@
 
 #elif FOC_MODE == VECOCITY_CURRENT_LOOP_MODE
 // 速度环参数
-#define LEFT_VELOCITY_KP            1.2                   //Kp
-#define LEFT_VELOCITY_KI            0.004                //Ki
+#define LEFT_VELOCITY_KP            2.0                 //Kp
+#define LEFT_VELOCITY_KI            0.08                //Ki
 // 电流环Q轴参数
 #define LEFT_I_Q_KP                 0.004               //Kp
 #define LEFT_I_Q_KI                 0.008               //Ki
@@ -41,20 +41,20 @@
 #elif FOC_MODE == ANGLE_CURRENT_LOOP_MODE
 
 // 角度环参数
-#define LEFT_ANGLE_KP               0.5                 //Kp
+#define LEFT_ANGLE_KP               0.05                 //Kp
 // 电流环Q轴参数
-#define LEFT_I_Q_KP                 0.005               //Kp
-#define LEFT_I_Q_KI                 0.007               //Ki
+#define LEFT_I_Q_KP                 0.004               //Kp
+#define LEFT_I_Q_KI                 0.008               //Ki
 // 电流环D轴参数
-#define LEFT_I_D_KP                 0.005               //Kp
-#define LEFT_I_D_KI                 0.007               //Ki
+#define LEFT_I_D_KP                 0.004               //Kp
+#define LEFT_I_D_KI                 0.008               //Ki
 
 #elif FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE
 // 角度环参数
 #define LEFT_ANGLE_KP               0.5                 //Kp
 // 速度环参数
-#define LEFT_VELOCITY_KP            3                   //Kp
-#define LEFT_VELOCITY_KI            0.04                //Ki
+#define LEFT_VELOCITY_KP            2.0                 //Kp
+#define LEFT_VELOCITY_KI            0.08                //Ki
 // 电流环Q轴参数
 #define LEFT_I_Q_KP                 0.005               //Kp
 #define LEFT_I_Q_KI                 0.007               //Ki

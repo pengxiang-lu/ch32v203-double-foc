@@ -271,124 +271,154 @@ void motor_foc_control_init(motor_struct * motor_p)
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
 #define ANGLE_LOOP_COUNT			(F_OPEN / F_ANGLE)
+
+static void motor_update_current_loop(motor_struct * motor_p)
+{
+#if CURRENT_SENSOR == DRIVER_ENABLE
+    inline_current_get_current(&motor_p->current_struct);
+    current_duty_calculate(&motor_p->foc_cal_struct,
+                          &motor_p->current_struct,
+                          motor_p->encoder_struct.encoder_value_now);
+
+    motor_p->current_struct.i_q_filter = (motor_p->current_struct.i_q_filter * 9 + motor_p->current_struct.i_q) / 10;
+    motor_p->current_struct.i_d_filter = (motor_p->current_struct.i_d_filter * 9 + motor_p->current_struct.i_d) / 10;
+
+#ifdef FOC_MODE_WITH_CURRENT
+#if FOC_MODE != I_D_LOOP_MODE
+    motor_p->u_q_duty = pi_controller(&motor_p->i_q_pid_struct,
+                                     motor_p->i_q_set - motor_p->current_struct.i_q_filter);
+#endif
+    motor_p->u_d_duty = pi_controller(&motor_p->i_d_pid_struct,
+                                     motor_p->i_d_set - motor_p->current_struct.i_d_filter);
+#endif
+#endif
+}
+
+static void motor_update_speed_observe(motor_struct * motor_p)
+{
+    if(++motor_p->speed_observe_count < VECOCITY_OB_COUNT)
+    {
+        return;
+    }
+
+    motor_p->speed_observe_count = 0;
+    motor_p->motor_speed = -motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;
+    motor_p->motor_speed_filter = (motor_p->motor_speed_filter * 19 + motor_p->motor_speed) / 20;
+    motor_p->motor_angle += motor_p->rotation_direction * motor_p->encoder_struct.encoder_offset_integral;
+    motor_p->encoder_struct.encoder_offset_integral = 0;
+}
+
+static void motor_update_angle_loop(motor_struct * motor_p)
+{
+    if(++motor_p->angle_count < ANGLE_LOOP_COUNT)
+    {
+        return;
+    }
+
+    motor_p->angle_count = 0;
+
+    if(FOC_MODE == ANGLE_LOOP_MODE)
+    {
+        motor_p->u_q_duty = p_controller(&motor_p->angle_pid_struct,
+                                        motor_p->motor_angle_set - motor_p->motor_angle);
+    }
+    else if(FOC_MODE == ANGLE_VECOCITY_LOOP_MODE)
+    {
+        motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,
+                                               motor_p->motor_angle_set - motor_p->motor_angle);
+    }
+    else if(FOC_MODE == ANGLE_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
+    {
+        motor_p->i_q_set = p_controller(&motor_p->angle_pid_struct,
+                                       motor_p->motor_angle_set - motor_p->motor_angle);
+    }
+    else if(FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
+    {
+        motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,
+                                               motor_p->motor_angle_set - motor_p->motor_angle);
+    }
+}
+
+static void motor_update_speed_loop(motor_struct * motor_p)
+{
+    if(++motor_p->speed_count < VECOCITY_LOOP_COUNT)
+    {
+        return;
+    }
+
+    motor_p->speed_count = 0;
+
+#if MOTOR_LOCKED_PROTECT == DRIVER_ENABLE
+    if(func_abs(motor_p->motor_speed_filter) < 10 && func_abs(motor_p->u_q_duty) >= MOTOR_LOCKED_DUTY_MAX)
+    {
+        motor_p->protect_count ++;
+
+        if(motor_p->protect_count > MOTOR_LOCKED_TIME)
+        {
+            motor_p->protect_count = MOTOR_LOCKED_TIME;
+            motor_p->led_struct.motor_protect_state = ERROR_STATE;
+        }
+    }
+    else
+    {
+        motor_p->protect_count = 0;
+    }
+#endif
+
+    if(FOC_MODE == VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE)
+    {
+        motor_p->u_q_duty = pi_controller(&motor_p->vecocity_pid_struct,
+                                         motor_p->motor_speed_set - motor_p->motor_speed_filter);
+    }
+    else if(FOC_MODE == VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
+    {
+        motor_p->i_q_set = pi_controller(&motor_p->vecocity_pid_struct,
+                                        motor_p->motor_speed_set - motor_p->motor_speed_filter);
+    }
+    else if(FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
+    {
+        motor_p->i_q_set = pi_controller(&motor_p->vecocity_pid_struct,
+                                        motor_p->motor_speed_set - motor_p->motor_speed_filter);
+    }
+}
+
 // 电机执行回调函数 50ms进一次
 void motor_callback(motor_struct * motor_p)
 {
-	encoder_get_absolute_data(&motor_p->encoder_struct); 		                    // 采集电机磁编码器数值,偏移量等
-	
-	motor_p->encoder_struct.encoder_offset_integral += motor_p->encoder_struct.encoder_value_offset; // 偏移值积分 用于速度计算
-	
-	#if	CURRENT_SENSOR == DRIVER_ENABLE												// 使能电流传感器
-	
-	inline_current_get_current(&motor_p->current_struct);																			// 获取电流值
-			
-	current_duty_calculate(&motor_p->foc_cal_struct,&motor_p->current_struct,motor_p->encoder_struct.encoder_value_now);			// 计算当前的i_q,i_d
+    encoder_get_absolute_data(&motor_p->encoder_struct);
+    motor_p->encoder_struct.encoder_offset_integral += motor_p->encoder_struct.encoder_value_offset;
 
-	motor_p->current_struct.i_q_filter = (motor_p->current_struct.i_q_filter*9 + motor_p->current_struct.i_q)/10;			// i_q滤波
+    // 1. 电流环：采样、dq变换、滤波和 PI 控制
+    motor_update_current_loop(motor_p);
 
-	motor_p->current_struct.i_d_filter = (motor_p->current_struct.i_d_filter*9 + motor_p->current_struct.i_d)/10;			// i_d滤波
-		
-    #ifdef FOC_MODE_WITH_CURRENT																		                    // 带电流环
-        #if FOC_MODE != I_D_LOOP_MODE
-        motor_p->u_q_duty = pi_controller(&motor_p->i_q_pid_struct,motor_p->i_q_set - motor_p->current_struct.i_q_filter);		// Q轴PID计算
-        #endif
-        motor_p->u_d_duty = pi_controller(&motor_p->i_d_pid_struct,motor_p->i_d_set - motor_p->current_struct.i_d_filter);		// D轴PID计算
+    // 2. 速度观测：更新速度和角度积分，按低频节拍执行
+    motor_update_speed_observe(motor_p);
 
-    #endif
-		
-	#endif
-	if(++ motor_p->speed_observe_count >= VECOCITY_OB_COUNT)									    // 速度观测频率一定要大于速度环频率
-	{
-	    motor_p->speed_observe_count = 0;
-		
-		// motor_p->motor_speed = motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO*motor_p->rotation_direction;   // 速度数据拟合,单位RPM(转每分钟),要注意方向，正力矩正方向为正方向
-		// 因为力矩正方向和磁编正方向是一致的
-	    motor_p->motor_speed = - motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;
+    // 3. 角度环 / 速度外环：只在低频节拍更新 setpoint
+    motor_update_angle_loop(motor_p);
 
-		motor_p->motor_speed_filter = (motor_p->motor_speed_filter*19+motor_p->motor_speed)/20;			                // 速度数据低通滤波
-		
-		motor_p->motor_angle += motor_p->rotation_direction*motor_p->encoder_struct.encoder_offset_integral;			// 角度的计算,需要带上方向
-		
-		motor_p->encoder_struct.encoder_offset_integral = 0;                            // 偏移积分归零
-	}
-	if(++ motor_p->angle_count >= ANGLE_LOOP_COUNT)
-	{
-	    motor_p->angle_count = 0;
-		
-		if(FOC_MODE == ANGLE_LOOP_MODE)													// 位置闭环
-		{
-			motor_p->u_q_duty = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set-motor_p->motor_angle);
-		}
-		else if(FOC_MODE == ANGLE_VECOCITY_LOOP_MODE)									// 角度环串速度环，角度外环
-		{
-			motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set-motor_p->motor_angle);
-		}
-		else if(FOC_MODE == ANGLE_CURRENT_LOOP_MODE && CURRENT_SENSOR==DRIVER_ENABLE)	// 电流环串角度环，角度外环
-		{
-			motor_p->i_q_set = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set-motor_p->motor_angle);
-		}
-		else if(FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR==DRIVER_ENABLE)
-		{
-			motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set-motor_p->motor_angle);
-		}
-	}
-	if(++ motor_p->speed_count >= VECOCITY_LOOP_COUNT)                               	// 拟合一次速度
-	{
-		
-	    motor_p->speed_count = 0;
-		
-		#if MOTOR_LOCKED_PROTECT == DRIVER_ENABLE                                   	  										// 输出保护计次
-		
-		if(func_abs(motor_p->motor_speed_filter) < 10 && func_abs(motor_p->u_q_duty) >= MOTOR_LOCKED_DUTY_MAX)  	            // 判断是否堵转  占空比大于10%并且无转速数据持续 500ms
-		{
-		    motor_p->protect_count ++;
-		
-			if(motor_p->protect_count > MOTOR_LOCKED_TIME)
-			{
-			    motor_p->protect_count = MOTOR_LOCKED_TIME;
-				
-				motor_p->led_struct.motor_protect_state = ERROR_STATE;                  										// 条件成立  进入输出保护状态
-			}
-		}
-		else
-		{
-		    motor_p->protect_count = 0;                                            												// 否则清空保护计次
-		}
-		#endif
-		
-		if(FOC_MODE == VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE)	            // 速度闭环 或 位置+速度闭环
-		{	
-			motor_p->u_q_duty = pi_controller(&motor_p->vecocity_pid_struct,motor_p->motor_speed_set-motor_p->motor_speed_filter);
-		}
-		else if(FOC_MODE == VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR==DRIVER_ENABLE)		// 速度环串电流环，速度外环
-		{
-			motor_p->i_q_set = pi_controller(&motor_p->vecocity_pid_struct,motor_p->motor_speed_set-motor_p->motor_speed_filter);
-		}
-		else if(FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR==DRIVER_ENABLE)			
-		{
-			motor_p->i_q_set = pi_controller(&motor_p->vecocity_pid_struct,motor_p->motor_speed_set-motor_p->motor_speed_filter);
-		}
-	}
-	  
-	foc_calculate(&motor_p->foc_cal_struct,motor_p->encoder_struct.encoder_value_now,motor_p->u_q_duty,motor_p->u_d_duty);  		// FOC计算
-	
-	// 保护状态错误
+    // 4. 速度环：在较低频节拍更新速度闭环或内环参考值
+    motor_update_speed_loop(motor_p);
 
-	if(motor_p->led_struct.motor_protect_state == ERROR_STATE
-	   || motor_p->led_struct.encoder_state == ERROR_STATE
-	   || battery_struct.battery_state == ERROR_STATE)
-	{
-		motor_p->motor_set_duty(0, 0, 0);
-	}
-	else
-	{
-		// 输出占空比到电机
-		motor_p->motor_set_duty(motor_p->foc_cal_struct.output_duty[0],
-						        motor_p->foc_cal_struct.output_duty[1],
-						        motor_p->foc_cal_struct.output_duty[2]);
-	}
+    // 5. FOC计算与输出
+    foc_calculate(&motor_p->foc_cal_struct,
+                  motor_p->encoder_struct.encoder_value_now,
+                  motor_p->u_q_duty,
+                  motor_p->u_d_duty);
+
+    if(motor_p->led_struct.motor_protect_state == ERROR_STATE
+       || motor_p->led_struct.encoder_state == ERROR_STATE
+       || battery_struct.battery_state == ERROR_STATE)
+    {
+        motor_p->motor_set_duty(0, 0, 0);
+    }
+    else
+    {
+        motor_p->motor_set_duty(motor_p->foc_cal_struct.output_duty[0],
+                                motor_p->foc_cal_struct.output_duty[1],
+                                motor_p->foc_cal_struct.output_duty[2]);
+    }
 }
-
 
 void TIM1_UP_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 // 定时器1中断服务函数

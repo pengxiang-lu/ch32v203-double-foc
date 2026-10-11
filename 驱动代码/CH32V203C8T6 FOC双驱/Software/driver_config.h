@@ -92,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							I_Q_LOOP_MODE
+#define FOC_MODE 							ANGLE_CURRENT_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -116,11 +116,11 @@
 #define  DATA_PRINTF					DRIVER_ENABLE				// 回传数据总使能开关
 
 #define  ANGLE_PRINTF				    DRIVER_DISABLE				// 磁编数据回传
-#define  VECOCITY_PRINTF				DRIVER_DISABLE 				// 回传速度
+#define  VECOCITY_PRINTF				DRIVER_ENABLE 				// 回传速度
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
-#define  I_Q_I_D_PRINTF					DRIVER_DISABLE				// i_q,i_d数据回传
-#define  BATTERY_PRINTF					DRIVER_ENABLE				// 电池电压回传
+#define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传
+#define  BATTERY_PRINTF					DRIVER_DISABLE				// 电池电压回传
 // #define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
 /**************************** 数据回传 ****************************/
 
@@ -143,8 +143,8 @@
 /**************************** 堵转保护 *************************/
 					
 // 限幅配置
-#define MAIN_DUTY_LIMIT             2000                            // 占空比限幅
-#define I_Q_LIMIT                   2000                            // 内环输出i_q最大值限幅
+#define MAIN_DUTY_LIMIT             3000                            // 占空比限幅
+#define I_Q_LIMIT                   3000                            // 内环输出i_q最大值限幅
 #define VECOCITY_LIMIT              1000                            // 内环输出速度限幅
 
 
