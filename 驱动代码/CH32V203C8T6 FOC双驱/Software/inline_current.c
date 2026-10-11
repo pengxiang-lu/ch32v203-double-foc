@@ -23,6 +23,9 @@
 // 查找 ADC 零偏移量的函数
 void inline_current_calibrate_offsets(current_struct * current_p)
 {
+    current_p->offset_ia = 0;
+    current_p->offset_ib = 0;
+    current_p->offset_ic = 0;
     // 读数1000次
     for (int i = 0; i < 1000; i++)
 	{
