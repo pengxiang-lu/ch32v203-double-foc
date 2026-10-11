@@ -11,7 +11,7 @@ battery_value_struct battery_struct;
 //-------------------------------------------------------------------------------------------------------------------
 protect_enum battery_check(battery_value_struct * battery_p)
 {
-    if(battery_p->battery_state == ERROR_STATE)
+    if(battery_p->battery_state == NORMAL_STATE)
     {   if(battery_p->battery_voltage < battery_p->battery_err_voltage)
         {
             battery_p->error_count_num ++;
@@ -53,7 +53,7 @@ void battery_adc_loop(battery_value_struct * battery_p)
 {       
     uint16_t adc_data = 0;                                                  	// 定义 临时 ADC 采集数据 存储位置
     
-    adc_data = battery_read_adc_value(battery_p,5);                             			// 5次均值采样
+    adc_data = battery_read_adc_value(battery_p,10);                             			// 5次均值采样
     
     battery_struct.battery_voltage  = adc_data * CONVERSION_COEFFICIENT * BATTERY_RECTIFY_COEFFICIENT;     	                // 计算实际电压  ADC数据 * 转换系数 * 矫正系数
     

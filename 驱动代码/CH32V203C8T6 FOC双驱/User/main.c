@@ -33,6 +33,8 @@ int main(void)
 #endif
         delay_ms(DRIVER_RESPONSE_CYCLE);        // 延时操作
         key_scan();                             // 扫描按键
+        battery_adc_loop(&battery_struct);                     // 电池电压检测主循环
+
 #if LEFT_MOTOR_STATE == DRIVER_ENABLE
         motor_led_loop(&left_motor.led_struct); // LED指示灯
 #endif
@@ -41,6 +43,6 @@ int main(void)
         motor_led_loop(&right_motor.led_struct);// LED指示灯
 #endif
 
-        //battery_adc_loop(&battery_struct);                     // 电池电压检测主循环
+
     }
 }

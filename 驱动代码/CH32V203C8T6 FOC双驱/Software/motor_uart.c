@@ -68,12 +68,12 @@ void motor_uart_data_callback()
 
 // 打印电池电压
 	#if BATTERY_PRINTF == DRIVER_ENABLE
-		printf("%.2f,",battery_struct.battery_voltage);
+		printf("%d,",(uint32_t)(battery_struct.battery_voltage * 1000));
 	#endif
 //	#if TIME_PRINTF == DRIVER_ENABLE
 //		printf("%d",left_motor.single_calculation_use_time);
 //	#endif
-	printf("%d\r\n",left_motor.rotation_direction);
+	printf("%d\r\n",0);
 #endif
 }
 void motor_driver_fifo_clear(uint32_t clear_length)
@@ -102,7 +102,7 @@ void motor_driver_parse_statement(uint8_t *statement_buffer)
 		left_motor.i_q_set=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
 		right_motor.i_q_set=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];
 	}
-    else if(FOC_MODE==I_D_LOOP_MODE)    // 如果是I_D电流闭环模式，控制的是Q轴电流
+    else if(FOC_MODE==I_D_LOOP_MODE)    // 如果是I_D电流闭环模式，控制的是D轴电流
     {
         left_motor.i_d_set=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
         right_motor.i_d_set=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];

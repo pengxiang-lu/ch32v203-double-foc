@@ -11,7 +11,7 @@ void motor_led_loop(led_struct * led_p)
 {
     key_scan();
     led_p->gpio_loop_count++;
-    if(battery_struct.battery_state == ERROR_STATE)
+    if(battery_struct.battery_state == ERROR_STATE)      // 电池保护失误100ms闪一次
     {
         if(led_p->gpio_loop_count>=led_p->high_freq_count)
         {

@@ -271,7 +271,7 @@ void motor_foc_control_init(motor_struct * motor_p)
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
 #define ANGLE_LOOP_COUNT			(F_OPEN / F_ANGLE)
-// 电机执行回调函数
+// 电机执行回调函数 50ms进一次
 void motor_callback(motor_struct * motor_p)
 {
 	encoder_get_absolute_data(&motor_p->encoder_struct); 		                    // 采集电机磁编码器数值,偏移量等
@@ -288,7 +288,7 @@ void motor_callback(motor_struct * motor_p)
 
 	motor_p->current_struct.i_d_filter = (motor_p->current_struct.i_d_filter*9 + motor_p->current_struct.i_d)/10;			// i_d滤波
 		
-    #ifdef FOC_MODE_WITH_CURRENT																		// 带电流环
+    #ifdef FOC_MODE_WITH_CURRENT																		                    // 带电流环
         #if FOC_MODE != I_D_LOOP_MODE
         motor_p->u_q_duty = pi_controller(&motor_p->i_q_pid_struct,motor_p->i_q_set - motor_p->current_struct.i_q_filter);		// Q轴PID计算
         #endif
@@ -332,14 +332,14 @@ void motor_callback(motor_struct * motor_p)
 			motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set-motor_p->motor_angle);
 		}
 	}
-	if(++ motor_p->speed_count >= VECOCITY_LOOP_COUNT)                               			// 每半毫秒拟合一次速度
+	if(++ motor_p->speed_count >= VECOCITY_LOOP_COUNT)                               	// 拟合一次速度
 	{
 		
 	    motor_p->speed_count = 0;
 		
 		#if MOTOR_LOCKED_PROTECT == DRIVER_ENABLE                                   	  										// 输出保护计次
 		
-		if(func_abs(motor_p->motor_speed_filter) < 10 && func_abs(motor_p->u_q_duty) >= MOTOR_LOCKED_DUTY_MAX)  	// 判断是否堵转  占空比大于10%并且无转速数据持续 500ms
+		if(func_abs(motor_p->motor_speed_filter) < 10 && func_abs(motor_p->u_q_duty) >= MOTOR_LOCKED_DUTY_MAX)  	            // 判断是否堵转  占空比大于10%并且无转速数据持续 500ms
 		{
 		    motor_p->protect_count ++;
 		

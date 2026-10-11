@@ -43,7 +43,7 @@ void interface_init()
 
     // 电池相关
     // 电池电压检测相关函数
-    battery_struct.battery_adc_init = motor_null;
+    battery_struct.battery_adc_init = current_sensor_adc_init;
     battery_struct.battery_adc_read = battery_adc_read;
 
 }

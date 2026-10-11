@@ -28,7 +28,7 @@
 #define NO                              (0)             // 否
 /**************************** 电机配置 ****************************/
 #define LEFT_MOTOR_STATE            DRIVER_ENABLE
-#define RIGHT_MOTOR_STATE           DRIVER_ENABLE
+#define RIGHT_MOTOR_STATE           DRIVER_DISABLE
 // PWM重装值配置
 #define MOTOR_DUTY_BIT				12								// 满占空比位数
 #define MOTOR_DUTY_MAX				4096							// 满占空比,长度为2的12次方
@@ -54,7 +54,7 @@
 
 /************************* 电流传感器配置 *************************/
 // 采样基本参数配置
-#define CURRENT_SENSOR						DRIVER_DISABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
+#define CURRENT_SENSOR						DRIVER_ENABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
 #define SHUNT_RESISTER						0.01			// 分流电阻,单位为Ω
 #define GAIN								20				// 放大倍数
 #define ADC_REF_VOLTAGE 					3.3           	// ADC电压,单位为V
@@ -84,6 +84,7 @@
 #define VECOCITY_LOOP_MODE					(1)				// 速度环模式
 #define ANGLE_LOOP_MODE						(2)				// 角度环模式
 #define ANGLE_VECOCITY_LOOP_MODE			(3)				// 速度环串 角度环模式
+
 // 如果没有电流传感器,就不能选择以下带电流环的模式
 #define I_Q_LOOP_MODE					    (4)				// I_Q和I_D闭环模式,默认I_D为0
 #define I_D_LOOP_MODE                       (5)             // I_D闭环模式,此时I_Q没有闭环
@@ -91,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							OPEN_LOOP_MODE
+#define FOC_MODE 							I_Q_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -115,12 +116,12 @@
 #define  DATA_PRINTF					DRIVER_ENABLE				// 回传数据总使能开关
 
 #define  ANGLE_PRINTF				    DRIVER_DISABLE				// 磁编数据回传
-#define  VECOCITY_PRINTF				DRIVER_ENABLE 				// 回传速度
+#define  VECOCITY_PRINTF				DRIVER_DISABLE 				// 回传速度
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
 #define  I_Q_I_D_PRINTF					DRIVER_DISABLE				// i_q,i_d数据回传
-#define  BATTERY_PRINTF					DRIVER_DISABLE				// 电池电压回传
-#define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
+#define  BATTERY_PRINTF					DRIVER_ENABLE				// 电池电压回传
+// #define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
 /**************************** 数据回传 ****************************/
 
 
@@ -129,7 +130,7 @@
 #define R_N                             10.0f                                               // 低测电阻阻值，单位kΩ
 #define VOLTAGE_RATIO                   (R_N/(R_P+R_N))                                     // 电池分压比
 #define CONVERSION_COEFFICIENT          ADC_REF_VOLTAGE/ADC_PRECISION/VOLTAGE_RATIO         // 电池电压转换系数 12位ADC采集值 直接乘以该值则可得出电池电压
-#define BATTERY_RECTIFY_COEFFICIENT     (0.9059968)          // 电池电压校准系数 根据实际硬件调整
+#define BATTERY_RECTIFY_COEFFICIENT     (1.08)                                                 // 电池电压校准系数 根据实际硬件调整(0.9059968)
 #define BATTERY_PROTECT                 DRIVER_DISABLE      // 是否开启电池保护功能(默认开启)      DRIVER_ENABLE: 开启电池保护    DRIVER_DISABLE: 不开启电池保护
 #define BATTERY_ERR_VOLTAGE             11.3f               // 错误状态电压，低于此电压时电池状态错误
 /**************************** 电池保护 ****************************/
