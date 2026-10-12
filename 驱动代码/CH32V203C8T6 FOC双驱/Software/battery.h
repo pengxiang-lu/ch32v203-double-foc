@@ -6,7 +6,8 @@
 typedef struct
 {
 
-    float                       battery_voltage;                        // 电池当前电压
+    float                       battery_voltage;                        // 低通滤波后的电池电压，单位为V
+    uint8_t                     voltage_filter_initialized;             // 首次采样直接初始化滤波值
 
     protect_enum                battery_state;                          // 电池当前状态
 

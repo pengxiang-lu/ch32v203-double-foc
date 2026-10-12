@@ -35,6 +35,9 @@ int32_t fast_cos(int32_t x);
 int32_t normalize(int32_t location_temp);
 void foc_direct_calculate(foc_struct *foc_pointer, float angle_el, float output_duty_max);
 void foc_calculate(foc_struct *foc_pointer, int32_t now_encoder_data, int32_t u_q_duty,int32_t u_d_duty);
+// 每周期先更新电角度，再执行电流变换和电压调制。
+void foc_update_electrical_angle(foc_struct *foc_p, int32_t now_encoder_data);
+void foc_calculate_with_angle(foc_struct *foc_p, int32_t u_q_duty, int32_t u_d_duty);
 void foc_init(foc_struct *foc_pointer, uint32_t motor_pole_pairs, int32_t zero_location, int32_t rotation_direction);
 
 

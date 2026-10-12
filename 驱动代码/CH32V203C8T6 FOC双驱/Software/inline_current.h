@@ -17,7 +17,8 @@ typedef struct
 extern uint16_t inline_current_adc_value[3];
 void inline_current_get_current(current_struct * current_p);
 uint8_t inline_currentsense_init(current_struct*current_p);
-void current_duty_calculate(foc_struct *foc_p, current_struct*current_p,int32_t now_encoder_data);
+// 调用前须通过 foc_update_electrical_angle 更新本周期电角度。
+void current_duty_calculate(foc_struct *foc_p, current_struct*current_p);
 #endif
 
 

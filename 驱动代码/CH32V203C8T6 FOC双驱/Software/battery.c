@@ -1,5 +1,8 @@
 #include "driver_config.h"
 
+// 一阶低通系数；约10ms更新一次时，时间常数约95ms。
+#define BATTERY_VOLTAGE_FILTER_ALPHA 0.1f
+
 battery_value_struct battery_struct;         
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -50,15 +53,25 @@ uint16_t battery_read_adc_value(battery_value_struct * battery_p,uint8_t n)
 // 备注信息     
 //-------------------------------------------------------------------------------------------------------------------
 void battery_adc_loop(battery_value_struct * battery_p)
-{       
-    uint16_t adc_data = 0;                                                  	// 定义 临时 ADC 采集数据 存储位置
-    
-    adc_data = battery_read_adc_value(battery_p,10);                             			// 5次均值采样
-    
-    battery_struct.battery_voltage  = adc_data * CONVERSION_COEFFICIENT * BATTERY_RECTIFY_COEFFICIENT;     	                // 计算实际电压  ADC数据 * 转换系数 * 矫正系数
-    
+{
+    uint16_t adc_data = battery_read_adc_value(battery_p, 10);
+    float voltage = adc_data * CONVERSION_COEFFICIENT * BATTERY_RECTIFY_COEFFICIENT;
+
+    if (!battery_p->voltage_filter_initialized)
+    {
+        // 首次采样直接赋值，避免滤波从零开始造成启动欠压误判。
+        battery_p->battery_voltage = voltage;
+        battery_p->voltage_filter_initialized = 1;
+    }
+    else
+    {
+        battery_p->battery_voltage += BATTERY_VOLTAGE_FILTER_ALPHA
+                                   * (voltage - battery_p->battery_voltage);
+    }
+
 #if BATTERY_PROTECT == DRIVER_ENABLE
-    battery_struct.battery_state    = battery_check(&battery_struct);                                                       // 根据电压判断当前电池状态
+    // 使用滤波后的电压进行原有的连续欠压判断。
+    battery_p->battery_state = battery_check(battery_p);
 #endif
 }
 
@@ -76,7 +89,10 @@ void battery_init(battery_value_struct * battery_p,float battery_err_voltage)
 
     battery_p->battery_err_voltage = battery_err_voltage;                       // 阈值电压
 
-    battery_struct.battery_state = NORMAL_STATE;
+    battery_p->battery_voltage = 0.0f;
+    battery_p->voltage_filter_initialized = 0;
+    battery_p->error_count_num = 0;
+    battery_p->battery_state = NORMAL_STATE;
 }
 
 

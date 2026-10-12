@@ -89,15 +89,12 @@ void inline_current_get_current(current_struct * current_p)
 	#endif
 }
 
-void current_duty_calculate(foc_struct *foc_p, current_struct*current_p,int32_t now_encoder_data)
+void current_duty_calculate(foc_struct *foc_p, current_struct*current_p)
 {
 	static int32_t 	location_temp_a = 0;
 	static int32_t 	location_temp_b = 0;
 	static int32_t 	location_temp_c = 0;
-	// 计算电角度 
-	foc_p->encoder_el = foc_p->motor_rotation_direction*foc_p->motor_pole_pairs*now_encoder_data-foc_p->motor_zero_location;
-	// 归一化
-	foc_p->encoder_el = normalize(foc_p->encoder_el);
+	// 使用本周期统一更新的电角度。
 	// 计算三个角度
 	location_temp_a = foc_p->encoder_el - ENCODER_PRECISION_6;
 	

@@ -54,7 +54,7 @@
 
 /************************* 电流传感器配置 *************************/
 // 采样基本参数配置
-#define CURRENT_SENSOR						DRIVER_ENABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
+#define CURRENT_SENSOR						DRIVER_DISABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
 #define SHUNT_RESISTER						0.01			// 分流电阻,单位为Ω
 #define GAIN								20				// 放大倍数
 #define ADC_REF_VOLTAGE 					3.3           	// ADC电压,单位为V
@@ -92,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							VECOCITY_CURRENT_LOOP_MODE
+#define FOC_MODE 							VECOCITY_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -120,8 +120,8 @@
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
 #define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传
-#define  BATTERY_PRINTF					DRIVER_DISABLE				// 电池电压回传
-#define  TIME_PRINTF					DRIVER_ENABLE				// 单次执行周期回传
+#define  BATTERY_PRINTF					DRIVER_ENABLE				// 电池电压回传
+#define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
 /**************************** 数据回传 ****************************/
 
 

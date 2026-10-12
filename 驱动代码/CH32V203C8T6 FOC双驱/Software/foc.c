@@ -293,12 +293,25 @@ void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
     foc_p->u_d = (int32_t)(limit * u_d_duty / magnitude);
 }
 uint8_t svpwm_transform_table[8] ={0,2,6,1,4,3,5,7};						// N编号转化为真实的扇区编号
-void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty,int32_t u_d_duty)
+// 更新电角度，供本周期的电流变换和电压调制共用。
+void foc_update_electrical_angle(foc_struct *foc_p, int32_t now_encoder_data)
 {
 	// 计算电角度
 	foc_p->encoder_el = foc_p->motor_rotation_direction*foc_p->motor_pole_pairs*now_encoder_data-foc_p->motor_zero_location;
 	// 归一化
 	foc_p->encoder_el = normalize(foc_p->encoder_el);
+}
+
+// 保留原接口，供启动校准等独立调用使用。
+void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty,int32_t u_d_duty)
+{
+    foc_update_electrical_angle(foc_p, now_encoder_data);
+    foc_calculate_with_angle(foc_p, u_q_duty, u_d_duty);
+}
+
+// 使用已更新的电角度，本函数不再读取或换算编码器角度。
+void foc_calculate_with_angle(foc_struct *foc_p, int32_t u_q_duty, int32_t u_d_duty)
+{
 	// u_q,u_d合成矢量圆限幅
 	circle_limitation(foc_p,u_q_duty,u_d_duty);	
 	// 定义三相输出位置临时变量

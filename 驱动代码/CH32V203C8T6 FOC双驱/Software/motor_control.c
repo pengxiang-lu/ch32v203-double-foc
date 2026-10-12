@@ -274,14 +274,18 @@ void motor_foc_control_init(motor_struct * motor_p)
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
 #define ANGLE_LOOP_COUNT			(F_OPEN / F_ANGLE)
+#define SPEED_Q16_NUMERATOR (60LL * F_OPEN * 65536LL)
+#define SPEED_Q16_DENOMINATOR (1LL * ENCODER_PRECISION * VECOCITY_OB_COUNT)
+#if VECOCITY_OB_COUNT < 1
+#error "Speed observation interval must be at least one control cycle"
+#endif
 
 static void motor_update_current_loop(motor_struct * motor_p)
 {
 #if CURRENT_SENSOR == DRIVER_ENABLE
     inline_current_get_current(&motor_p->current_struct);
     current_duty_calculate(&motor_p->foc_cal_struct,
-                          &motor_p->current_struct,
-                          motor_p->encoder_struct.encoder_value_now);
+                          &motor_p->current_struct);
 
     motor_p->current_struct.i_q_filter = (motor_p->current_struct.i_q_filter * 9 + motor_p->current_struct.i_q) / 10;
     motor_p->current_struct.i_d_filter = (motor_p->current_struct.i_d_filter * 9 + motor_p->current_struct.i_d) / 10;
@@ -310,8 +314,15 @@ static void motor_update_speed_observe(motor_struct * motor_p)
                         * motor_p->encoder_struct.encoder_offset_integral;
     // 使用实际整数分频后的观测周期，即 20000/3，而不是标称的 6000Hz。
     // 低速附近在低通滤波内部保留 RPM 小数。
-    int64_t speed_q16 = (int64_t)angle_delta * 60 * F_OPEN * 65536
-                      / ((int64_t)ENCODER_PRECISION * VECOCITY_OB_COUNT);
+#if (SPEED_Q16_NUMERATOR % SPEED_Q16_DENOMINATOR) == 0
+    // 当前配置系数精确等于1600000，编译期约分后只执行乘法。
+    int64_t speed_q16 = (int64_t)angle_delta
+                      * (SPEED_Q16_NUMERATOR / SPEED_Q16_DENOMINATOR);
+#else
+    // 修改频率后若不能整除，保持原公式的精度和向零取整行为。
+    int64_t speed_q16 = (int64_t)angle_delta * SPEED_Q16_NUMERATOR
+                      / SPEED_Q16_DENOMINATOR;
+#endif
     motor_p->motor_speed = (int32_t)(speed_q16 / 65536);
     motor_p->motor_speed_filter_q16 =(motor_p->motor_speed_filter_q16 * 19 + speed_q16) / 20;
     motor_p->motor_speed_filter = (int32_t)(motor_p->motor_speed_filter_q16 / 65536);
@@ -398,6 +409,10 @@ void motor_callback(motor_struct * motor_p)
     encoder_get_absolute_data(&motor_p->encoder_struct);
     motor_p->encoder_struct.encoder_offset_integral += motor_p->encoder_struct.encoder_value_offset;
 
+    // 每个电机每周期只换算一次电角度，电流变换和电压调制共用。
+    foc_update_electrical_angle(&motor_p->foc_cal_struct,
+                                motor_p->encoder_struct.encoder_value_now);
+
     // 1. 电流环：采样、dq变换、滤波和 PI 控制
     motor_update_current_loop(motor_p);
 
@@ -411,10 +426,9 @@ void motor_callback(motor_struct * motor_p)
     motor_update_speed_loop(motor_p);
 
     // 5. FOC计算与输出
-    foc_calculate(&motor_p->foc_cal_struct,
-                  motor_p->encoder_struct.encoder_value_now,
-                  motor_p->u_q_duty,
-                  motor_p->u_d_duty);
+    foc_calculate_with_angle(&motor_p->foc_cal_struct,
+                             motor_p->u_q_duty,
+                             motor_p->u_d_duty);
 
     if(motor_p->led_struct.motor_protect_state == ERROR_STATE
        || motor_p->led_struct.encoder_state == ERROR_STATE
