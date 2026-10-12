@@ -1,9 +1,11 @@
 #include "driver_config.h"
-uint16_t adc_value[5];
+static volatile uint16_t adc_dma_value[5];
+static volatile uint16_t adc_value[5];
+static uint8_t adc_initialized;
+static uint8_t adc_busy;
 // ADC输入脚:I_A->PA0,I_B->PA1,IC->PA7,这里默认初始化三路电流传感器
 void current_sensor_adc_init()
 {
-	static uint8_t adc_initialized = 0;
 	if (adc_initialized)
 	{
 		return;
@@ -45,7 +47,7 @@ void current_sensor_adc_init()
 	DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->RDATAR;
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;	
 	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;			
-	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)adc_value;
+	DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)adc_dma_value;
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;			
 	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;						
 	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;							
@@ -66,31 +68,53 @@ void current_sensor_adc_init()
 	ADC_StartCalibration(ADC1);
 	while (ADC_GetCalibrationStatus(ADC1) == SET);
 	
-	/*ADC触发*/
-	ADC_SoftwareStartConvCmd(ADC1, ENABLE);	                //软件触发ADC开始工作，由于ADC处于连续转换模式，故触发一次后ADC就可以一直连续不断地工作
-	adc_initialized = 1;
+    adc_initialized = 1;
+    adc_sample_start();
 }
-void battery_adc_init() 
+
+// Called only by startup calibration (IRQs off) or the TIM1 sampling service.
+void adc_sample_start(void)
+{
+    if (!adc_initialized || adc_busy)
+        return;
+    DMA_ClearFlag(DMA1_FLAG_GL1);
+    adc_busy = 1;
+    ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+}
+
+uint8_t adc_sample_publish(void)
+{
+    if (!adc_initialized || !adc_busy
+        || DMA_GetFlagStatus(DMA1_FLAG_TE1) != RESET
+        || DMA_GetFlagStatus(DMA1_FLAG_TC1) == RESET)
+        return 0;
+
+    // Single scan has stopped. Copy the entire frame before restarting.
+    for (uint8_t i = 0; i < 5; ++i)
+        adc_value[i] = adc_dma_value[i];
+    DMA_ClearFlag(DMA1_FLAG_GL1);
+    adc_busy = 0;
+    return 1;
+}
+
+void battery_adc_init(void)
 {
     current_sensor_adc_init();
 }
-// ADC采集附带均值滤波
-uint16_t battery_adc_read()
+
+uint16_t battery_adc_read(void)
 {
-    ADC_SoftwareStartConvCmd(ADC1, ENABLE); //软件触发ADC开始工作
-    // 返回转换结果
     return adc_value[4];
 }
-// 放入读取ADC的底层函数
-void left_inline_current_read_adc()
+
+void left_inline_current_read_adc(void)
 {
-	ADC_SoftwareStartConvCmd(ADC1, ENABLE);	//软件触发ADC开始工作
-	left_motor.current_struct.inline_current_adc_value[I_A] = adc_value[0];
-	left_motor.current_struct.inline_current_adc_value[I_C] = adc_value[1];
+    left_motor.current_struct.inline_current_adc_value[I_A] = adc_value[0];
+    left_motor.current_struct.inline_current_adc_value[I_C] = adc_value[1];
 }
-void right_inline_current_read_adc()
+
+void right_inline_current_read_adc(void)
 {
-    ADC_SoftwareStartConvCmd(ADC1, ENABLE); //软件触发ADC开始工作
     right_motor.current_struct.inline_current_adc_value[I_A] = adc_value[2];
     right_motor.current_struct.inline_current_adc_value[I_C] = adc_value[3];
 }

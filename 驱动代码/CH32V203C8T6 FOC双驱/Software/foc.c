@@ -419,9 +419,10 @@ void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty
 		foc_p->output_duty[2] = foc_p->svpwm.tb;
 		break;
         default:
-        foc_p->output_duty[0] = 0;
-        foc_p->output_duty[1] = 0;
-        foc_p->output_duty[2] = 0;
+        // Keep the normal common-mode level for a zero/quantized vector.
+        foc_p->output_duty[0] = foc_p->svpwm.ta;
+        foc_p->output_duty[1] = foc_p->svpwm.ta;
+        foc_p->output_duty[2] = foc_p->svpwm.ta;
         break;
 	}
 	

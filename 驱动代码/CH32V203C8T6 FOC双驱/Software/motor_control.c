@@ -261,13 +261,16 @@ void motor_foc_control_init(motor_struct * motor_p)
 
 	#if	CURRENT_SENSOR == DRIVER_ENABLE							// 带电流环则需要相应的初始化
 	
-	inline_currentsense_init(&motor_p->current_struct);
+    if (!inline_currentsense_init(&motor_p->current_struct))
+    {
+        motor_p->led_struct.motor_protect_state = ERROR_STATE;
+        motor_p->motor_set_duty(0, 0, 0);
+    }
 
 	#endif
 	
 	motor_p->motor_angle =  motor_p->rotation_direction * encoder_get_absolute_data(&motor_p->encoder_struct);
 }
-#define SPEED_RATIO					(60*F_VECOCITY_OB/ENCODER_PRECISION)            // 这样算不准,但是为了速度损失精度
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
 #define ANGLE_LOOP_COUNT			(F_OPEN / F_ANGLE)
@@ -302,9 +305,18 @@ static void motor_update_speed_observe(motor_struct * motor_p)
     }
 
     motor_p->speed_observe_count = 0;
-    motor_p->motor_speed = -motor_p->encoder_struct.encoder_offset_integral * SPEED_RATIO;
-    motor_p->motor_speed_filter = (motor_p->motor_speed_filter * 19 + motor_p->motor_speed) / 20;
-    motor_p->motor_angle += motor_p->rotation_direction * motor_p->encoder_struct.encoder_offset_integral;
+    // Position and speed must use the same mechanical direction.
+    int32_t angle_delta = motor_p->rotation_direction
+                        * motor_p->encoder_struct.encoder_offset_integral;
+    // Use the actual integer divider: 20000 / 3, not nominal 6000 Hz.
+    // Keep fractional RPM through the low-pass filter near standstill.
+    int64_t speed_q16 = (int64_t)angle_delta * 60 * F_OPEN * 65536
+                      / ((int64_t)ENCODER_PRECISION * VECOCITY_OB_COUNT);
+    motor_p->motor_speed = (int32_t)(speed_q16 / 65536);
+    motor_p->motor_speed_filter_q16 =
+        (motor_p->motor_speed_filter_q16 * 19 + speed_q16) / 20;
+    motor_p->motor_speed_filter = (int32_t)(motor_p->motor_speed_filter_q16 / 65536);
+    motor_p->motor_angle += angle_delta;
     motor_p->encoder_struct.encoder_offset_integral = 0;
 }
 
@@ -424,17 +436,31 @@ void TIM1_UP_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 // 定时器1中断服务函数
 void TIM1_UP_IRQHandler(void)
 {
-    // 检查TIM1的更新中断标志位
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET)
     {
-#if LEFT_MOTOR_STATE    ==     DRIVER_ENABLE
+        TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
+        uint8_t frame_ready = adc_sample_publish();
+        adc_sample_start(); // One shared scan per tick, never wait here.
+#ifdef FOC_MODE_WITH_CURRENT
+        if (!frame_ready)
+        {
+            // Do not run current PI on an incomplete or stale frame.
+#if LEFT_MOTOR_STATE == DRIVER_ENABLE
+            left_motor.motor_set_duty(0, 0, 0);
+#endif
+#if RIGHT_MOTOR_STATE == DRIVER_ENABLE
+            right_motor.motor_set_duty(0, 0, 0);
+#endif
+            return;
+        }
+#else
+        (void)frame_ready;
+#endif
+#if LEFT_MOTOR_STATE == DRIVER_ENABLE
         motor_callback(&left_motor);
 #endif
-#if RIGHT_MOTOR_STATE    ==     DRIVER_ENABLE
+#if RIGHT_MOTOR_STATE == DRIVER_ENABLE
         motor_callback(&right_motor);
 #endif
-        TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
     }
-
 }
-

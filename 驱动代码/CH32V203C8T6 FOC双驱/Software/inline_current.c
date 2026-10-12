@@ -21,7 +21,7 @@
 #endif
 
 // 查找 ADC 零偏移量的函数
-void inline_current_calibrate_offsets(current_struct * current_p)
+static uint8_t inline_current_calibrate_offsets(current_struct * current_p)
 {
     current_p->offset_ia = 0;
     current_p->offset_ib = 0;
@@ -29,8 +29,11 @@ void inline_current_calibrate_offsets(current_struct * current_p)
     // 读数1000次
     for (int i = 0; i < 1000; i++)
 	{
-		current_p->inline_current_read_adc();
-		delay_ms(1);
+        adc_sample_start();
+        delay_ms(1); // Startup only; never wait inside the control ISR.
+        if (!adc_sample_publish())
+            return 0;
+        current_p->inline_current_read_adc();
         #ifdef I_A_ENABLE				
 			current_p->offset_ia += current_p->inline_current_adc_value[I_A];
 		#endif
@@ -57,13 +60,15 @@ void inline_current_calibrate_offsets(current_struct * current_p)
 		current_p->offset_ic = current_p->offset_ic / 1000;
 	#endif
 
+    adc_sample_start(); // Prime the next frame.
+    return 1;
 }
 //内置电流传感器初始化
-void inline_currentsense_init(current_struct * current_p)
+uint8_t inline_currentsense_init(current_struct * current_p)
 {
     current_p->inline_current_adc_init();
 
-    inline_current_calibrate_offsets(current_p); 		// 校准
+    return inline_current_calibrate_offsets(current_p); 		// 校准
 }
 
 

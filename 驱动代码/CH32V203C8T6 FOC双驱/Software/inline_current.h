@@ -16,7 +16,7 @@ typedef struct
 }current_struct;
 extern uint16_t inline_current_adc_value[3];
 void inline_current_get_current(current_struct * current_p);
-void inline_currentsense_init(current_struct*current_p);
+uint8_t inline_currentsense_init(current_struct*current_p);
 void current_duty_calculate(foc_struct *foc_p, current_struct*current_p,int32_t now_encoder_data);
 #endif
 

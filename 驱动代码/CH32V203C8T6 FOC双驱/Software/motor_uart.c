@@ -92,7 +92,7 @@ void motor_driver_parse_statement(uint8_t *statement_buffer)
 		left_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
 		right_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
 	}
-	else if(FOC_MODE==ANGLE_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_CURRENT_LOOP_MODE)	//如果是角度模式，控制的是角度
+	else if(FOC_MODE==ANGLE_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_CURRENT_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE)	//如果是角度模式，控制的是角度
 	{
 		left_motor.motor_angle_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
 		right_motor.motor_angle_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
