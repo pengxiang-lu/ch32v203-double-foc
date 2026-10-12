@@ -2,7 +2,7 @@
 #define __DRIVER_ADC_H_
 #include <stdint.h>
 void current_sensor_adc_init(void);
-// Nonblocking frame service; consumers only read the published snapshot.
+// 非阻塞帧服务；使用者只能读取已发布的采样快照。
 void adc_sample_start(void);
 uint8_t adc_sample_publish(void);
 void battery_adc_init(void);

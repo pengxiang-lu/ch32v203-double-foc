@@ -80,6 +80,7 @@ void motor_driver_fifo_clear(uint32_t clear_length)
 {
     fifo_read_buffer(&motor_driver_fifo, read_buffer, &clear_length, FIFO_READ_AND_CLEAN);
 }
+
 void motor_driver_parse_statement(uint8_t *statement_buffer)
 {
 	if(FOC_MODE==OPEN_LOOP_MODE)			// 如果是开环模式，控制的是电压占空比
@@ -90,7 +91,9 @@ void motor_driver_parse_statement(uint8_t *statement_buffer)
 	else if(FOC_MODE==VECOCITY_LOOP_MODE || FOC_MODE==VECOCITY_CURRENT_LOOP_MODE)	// 如果是速度模式，控制的是电机的速度
 	{
 		left_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+		left_motor.motor_speed_set = _constrain(left_motor.motor_speed_set,-VECOCITY_LIMIT,VECOCITY_LIMIT);
 		right_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
+		right_motor.motor_speed_set = _constrain(right_motor.motor_speed_set,-VECOCITY_LIMIT,VECOCITY_LIMIT);
 	}
 	else if(FOC_MODE==ANGLE_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_CURRENT_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE)	//如果是角度模式，控制的是角度
 	{

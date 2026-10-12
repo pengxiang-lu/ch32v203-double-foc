@@ -9,12 +9,13 @@ typedef struct
 	int32_t i_t;				// 转化后的参数i
 	float d;					// 参数d
 	int32_t d_t;				// 转化后的参数d
-	int64_t integral_acc;		// Integral accumulator, scaled by 2^17
+	int64_t integral_acc;		// 积分累加器，放大 2^17 倍
 	int32_t error_prev;			// 记录的误差
 	int32_t limit;				// 积分限幅
 }pid_struct;
 int32_t pi_controller(pid_struct * pid_p,int32_t error);
 int32_t p_controller(pid_struct * pid_p,int32_t error);
+int32_t pd_controller(pid_struct * pid_p, int32_t error, int32_t feedback_rate);
 void pid_parama_init(void);
 #endif
 

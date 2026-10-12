@@ -239,7 +239,7 @@ void motor_zero_calibration(motor_struct * motor_p)
 // 备注信息       
 //-------------------------------------------------------------------------------------------------------------------
 void motor_foc_control_init(motor_struct * motor_p)
-{ 
+{
     motor_p->led_struct.motor_protect_state  = NORMAL_STATE;          	    // 初始化默认电机为正常工作模式
   
     motor_p->led_struct.encoder_state        = NORMAL_STATE;           	// 初始化默认磁编码器为正常工作模式
@@ -305,16 +305,15 @@ static void motor_update_speed_observe(motor_struct * motor_p)
     }
 
     motor_p->speed_observe_count = 0;
-    // Position and speed must use the same mechanical direction.
+    // 位置和速度使用相同的机械方向定义。
     int32_t angle_delta = motor_p->rotation_direction
                         * motor_p->encoder_struct.encoder_offset_integral;
-    // Use the actual integer divider: 20000 / 3, not nominal 6000 Hz.
-    // Keep fractional RPM through the low-pass filter near standstill.
+    // 使用实际整数分频后的观测周期，即 20000/3，而不是标称的 6000Hz。
+    // 低速附近在低通滤波内部保留 RPM 小数。
     int64_t speed_q16 = (int64_t)angle_delta * 60 * F_OPEN * 65536
                       / ((int64_t)ENCODER_PRECISION * VECOCITY_OB_COUNT);
     motor_p->motor_speed = (int32_t)(speed_q16 / 65536);
-    motor_p->motor_speed_filter_q16 =
-        (motor_p->motor_speed_filter_q16 * 19 + speed_q16) / 20;
+    motor_p->motor_speed_filter_q16 =(motor_p->motor_speed_filter_q16 * 19 + speed_q16) / 20;
     motor_p->motor_speed_filter = (int32_t)(motor_p->motor_speed_filter_q16 / 65536);
     motor_p->motor_angle += angle_delta;
     motor_p->encoder_struct.encoder_offset_integral = 0;
@@ -331,18 +330,17 @@ static void motor_update_angle_loop(motor_struct * motor_p)
 
     if(FOC_MODE == ANGLE_LOOP_MODE)
     {
-        motor_p->u_q_duty = p_controller(&motor_p->angle_pid_struct,
-                                        motor_p->motor_angle_set - motor_p->motor_angle);
+        motor_p->u_q_duty = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set - motor_p->motor_angle);
     }
     else if(FOC_MODE == ANGLE_VECOCITY_LOOP_MODE)
     {
-        motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,
-                                               motor_p->motor_angle_set - motor_p->motor_angle);
+        motor_p->motor_speed_set = p_controller(&motor_p->angle_pid_struct,motor_p->motor_angle_set - motor_p->motor_angle);
     }
     else if(FOC_MODE == ANGLE_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
     {
-        motor_p->i_q_set = p_controller(&motor_p->angle_pid_struct,
-                                       motor_p->motor_angle_set - motor_p->motor_angle);
+        motor_p->i_q_set = pd_controller(&motor_p->angle_pid_struct,
+                                        motor_p->motor_angle_set - motor_p->motor_angle,
+                                        motor_p->motor_speed_filter);
     }
     else if(FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE && CURRENT_SENSOR == DRIVER_ENABLE)
     {
@@ -440,11 +438,11 @@ void TIM1_UP_IRQHandler(void)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
         uint8_t frame_ready = adc_sample_publish();
-        adc_sample_start(); // One shared scan per tick, never wait here.
+        adc_sample_start(); // 每个控制周期统一启动一次扫描，此处不阻塞等待。
 #ifdef FOC_MODE_WITH_CURRENT
         if (!frame_ready)
         {
-            // Do not run current PI on an incomplete or stale frame.
+            // 数据帧不完整或已过期时，不运行电流 PI。
 #if LEFT_MOTOR_STATE == DRIVER_ENABLE
             left_motor.motor_set_duty(0, 0, 0);
 #endif

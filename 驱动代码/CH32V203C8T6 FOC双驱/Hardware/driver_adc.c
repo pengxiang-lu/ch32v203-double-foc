@@ -72,7 +72,7 @@ void current_sensor_adc_init()
     adc_sample_start();
 }
 
-// Called only by startup calibration (IRQs off) or the TIM1 sampling service.
+// 仅由启动校准（中断关闭）或 TIM1 采样服务调用。
 void adc_sample_start(void)
 {
     if (!adc_initialized || adc_busy)
@@ -89,7 +89,7 @@ uint8_t adc_sample_publish(void)
         || DMA_GetFlagStatus(DMA1_FLAG_TC1) == RESET)
         return 0;
 
-    // Single scan has stopped. Copy the entire frame before restarting.
+    // 单次扫描已经停止；重新启动前复制整帧数据。
     for (uint8_t i = 0; i < 5; ++i)
         adc_value[i] = adc_dma_value[i];
     DMA_ClearFlag(DMA1_FLAG_GL1);

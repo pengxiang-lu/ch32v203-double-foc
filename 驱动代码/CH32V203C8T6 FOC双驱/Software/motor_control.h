@@ -33,7 +33,7 @@ typedef struct
 	int32_t								motor_speed_set;			// 电机设定转速            	转速单位：RPM
     int32_t                             motor_speed;                // 电机当前转速            	转速单位：RPM   
     int32_t                             motor_speed_filter;         // 电机当前转速(滤波)      	转速单位：RPM   
-    int64_t                             motor_speed_filter_q16;     // Filter state with fractional RPM
+    int64_t                             motor_speed_filter_q16;     // 保留 RPM 小数的速度滤波状态
     // 角度参数
 	int32_t								motor_angle_set;			// 电机设定角度				角度单位：磁编精度
 	int32_t								motor_angle;				// 电机当前角度				角度单位：磁编精度

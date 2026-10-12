@@ -30,7 +30,7 @@ static uint8_t inline_current_calibrate_offsets(current_struct * current_p)
     for (int i = 0; i < 1000; i++)
 	{
         adc_sample_start();
-        delay_ms(1); // Startup only; never wait inside the control ISR.
+        delay_ms(1); // 仅在启动校准时等待，控制中断内不能等待。
         if (!adc_sample_publish())
             return 0;
         current_p->inline_current_read_adc();
@@ -60,7 +60,7 @@ static uint8_t inline_current_calibrate_offsets(current_struct * current_p)
 		current_p->offset_ic = current_p->offset_ic / 1000;
 	#endif
 
-    adc_sample_start(); // Prime the next frame.
+    adc_sample_start(); // 启动下一帧采样。
     return 1;
 }
 //内置电流传感器初始化

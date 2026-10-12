@@ -249,7 +249,7 @@ int32_t normalize(int32_t location_temp)
 }
 static uint32_t integer_sqrt(uint64_t n)
 {
-    // Binary integer square root, rounded down; no division or overflow.
+    // 二进制整数平方根，结果向下取整，不使用除法且不会溢出。
     uint64_t root = 0;
     uint64_t bit = (uint64_t)1 << 62;
     while (bit > n)
@@ -272,7 +272,7 @@ static uint32_t integer_sqrt(uint64_t n)
 }
 void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
 {
-    // Each signed square fits int64_t; their sum may require uint64_t.
+    // 单个有符号数的平方可存入 int64_t，两个平方之和需要使用 uint64_t。
     uint64_t magnitude_squared = (uint64_t)((int64_t)u_q_duty * u_q_duty)
                                + (uint64_t)((int64_t)u_d_duty * u_d_duty);
     int64_t limit = MOTOR_DUTY_MAX;
@@ -283,12 +283,12 @@ void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
         return;
     }
 
-    // Round the magnitude up so the scaled vector stays inside the circle.
+    // 模长向上取整，保证缩放后的电压矢量不会超出圆限幅。
     int64_t magnitude = integer_sqrt(magnitude_squared);
     if ((uint64_t)(magnitude * magnitude) < magnitude_squared)
         ++magnitude;
 
-    // Signed 64-bit division preserves the direction of both axes.
+    // 使用有符号 64 位除法，保留两个轴的正负方向。
     foc_p->u_q = (int32_t)(limit * u_q_duty / magnitude);
     foc_p->u_d = (int32_t)(limit * u_d_duty / magnitude);
 }
@@ -419,7 +419,7 @@ void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty
 		foc_p->output_duty[2] = foc_p->svpwm.tb;
 		break;
         default:
-        // Keep the normal common-mode level for a zero/quantized vector.
+        // 零矢量或量化为零时，保持正常的共模占空比。
         foc_p->output_duty[0] = foc_p->svpwm.ta;
         foc_p->output_duty[1] = foc_p->svpwm.ta;
         foc_p->output_duty[2] = foc_p->svpwm.ta;

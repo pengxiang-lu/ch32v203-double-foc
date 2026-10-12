@@ -1,5 +1,5 @@
 #include "driver_config.h"
-//  Attention: flash擦写次数为10万次，故不可在死循环中反复调用flash函数  //
+// 注意：Flash 擦写寿命约为 10 万次，不可在死循环中反复调用擦写函数。
 /**
   * @brief    擦除指定FLASH地址页内的内容
   * @param    add 32位FLASH地址
