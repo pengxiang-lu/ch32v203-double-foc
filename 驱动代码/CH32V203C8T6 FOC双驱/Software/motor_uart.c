@@ -84,28 +84,28 @@ void motor_driver_parse_statement(uint8_t *statement_buffer)
 {
 	if(FOC_MODE==OPEN_LOOP_MODE)			// 如果是开环模式，控制的是电压占空比
 	{
-		left_motor.u_q_duty=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
-		right_motor.u_q_duty=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];
+		left_motor.u_q_duty=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+		right_motor.u_q_duty=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
 	}
 	else if(FOC_MODE==VECOCITY_LOOP_MODE || FOC_MODE==VECOCITY_CURRENT_LOOP_MODE)	// 如果是速度模式，控制的是电机的速度
 	{
-		left_motor.motor_speed_set=(int16_t)(((uint16_t)statement_buffer[1] << 8) | (uint16_t)statement_buffer[2]);
-		right_motor.motor_speed_set=(int16_t)(((uint16_t)statement_buffer[3] << 8) | (uint16_t)statement_buffer[4]);
+		left_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+		right_motor.motor_speed_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
 	}
 	else if(FOC_MODE==ANGLE_LOOP_MODE || FOC_MODE == ANGLE_VECOCITY_LOOP_MODE || FOC_MODE == ANGLE_CURRENT_LOOP_MODE)	//如果是角度模式，控制的是角度
 	{
-		left_motor.motor_angle_set=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
-		right_motor.motor_angle_set=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];
+		left_motor.motor_angle_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+		right_motor.motor_angle_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
 	}
 	else if(FOC_MODE==I_Q_LOOP_MODE)	// 如果是I_Q电流闭环模式，控制的是Q轴电流
 	{
-		left_motor.i_q_set=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
-		right_motor.i_q_set=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];
+		left_motor.i_q_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+		right_motor.i_q_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
 	}
     else if(FOC_MODE==I_D_LOOP_MODE)    // 如果是I_D电流闭环模式，控制的是D轴电流
     {
-        left_motor.i_d_set=((int16_t)statement_buffer[1] << 8) | (int)statement_buffer[2];
-        right_motor.i_d_set=((int16_t)statement_buffer[3] << 8) | (int)statement_buffer[4];
+        left_motor.i_d_set=(int16_t)((uint16_t)statement_buffer[1] << 8 | (uint16_t)statement_buffer[2]);
+        right_motor.i_d_set=(int16_t)((uint16_t)statement_buffer[3] << 8 | (uint16_t)statement_buffer[4]);
     }
 }
 void motor_driver_control_loop()

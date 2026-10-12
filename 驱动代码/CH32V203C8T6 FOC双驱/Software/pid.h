@@ -9,7 +9,7 @@ typedef struct
 	int32_t i_t;				// 转化后的参数i
 	float d;					// 参数d
 	int32_t d_t;				// 转化后的参数d
-	int32_t integral_prev;		// 记录的积分
+	int64_t integral_acc;		// Integral accumulator, scaled by 2^17
 	int32_t error_prev;			// 记录的误差
 	int32_t limit;				// 积分限幅
 }pid_struct;

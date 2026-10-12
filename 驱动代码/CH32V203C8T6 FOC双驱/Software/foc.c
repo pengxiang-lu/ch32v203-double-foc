@@ -247,35 +247,50 @@ int32_t normalize(int32_t location_temp)
 	}
 	return location_temp;
 }
-//开方函数,使用改进的牛顿法
-uint32_t integer_sqrt(int n) 
+static uint32_t integer_sqrt(uint64_t n)
 {
-    if (n <= 0) return 0;
-    
-    int x = n;
-    int y = (x + 1) / 2;  // 初始猜测值
-    
-    // 迭代直到收敛
-    while (y < x) {
-        x = y;
-        y = (x + n / x) / 2;
+    // Binary integer square root, rounded down; no division or overflow.
+    uint64_t root = 0;
+    uint64_t bit = (uint64_t)1 << 62;
+    while (bit > n)
+        bit >>= 2;
+
+    while (bit != 0)
+    {
+        if (n >= root + bit)
+        {
+            n -= root + bit;
+            root = (root >> 1) + bit;
+        }
+        else
+        {
+            root >>= 1;
+        }
+        bit >>= 2;
     }
-    
-    return x;
+    return (uint32_t)root;
 }
 void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
 {
-	uint32_t sum = integer_sqrt(u_q_duty * u_q_duty + u_d_duty * u_d_duty);
-	if(sum > MOTOR_DUTY_MAX)			// 如果斜边超过最大值，则进行等比例缩放
-	{	
-		foc_p->u_q 	= MOTOR_DUTY_MAX*u_q_duty/sum;
-		foc_p->u_d	= MOTOR_DUTY_MAX*u_d_duty/sum;
-	}
-	else
-	{
-		foc_p->u_q	= u_q_duty;
-		foc_p->u_d	= u_d_duty;
-	}
+    // Each signed square fits int64_t; their sum may require uint64_t.
+    uint64_t magnitude_squared = (uint64_t)((int64_t)u_q_duty * u_q_duty)
+                               + (uint64_t)((int64_t)u_d_duty * u_d_duty);
+    int64_t limit = MOTOR_DUTY_MAX;
+    if (magnitude_squared <= (uint64_t)(limit * limit))
+    {
+        foc_p->u_q = u_q_duty;
+        foc_p->u_d = u_d_duty;
+        return;
+    }
+
+    // Round the magnitude up so the scaled vector stays inside the circle.
+    int64_t magnitude = integer_sqrt(magnitude_squared);
+    if ((uint64_t)(magnitude * magnitude) < magnitude_squared)
+        ++magnitude;
+
+    // Signed 64-bit division preserves the direction of both axes.
+    foc_p->u_q = (int32_t)(limit * u_q_duty / magnitude);
+    foc_p->u_d = (int32_t)(limit * u_d_duty / magnitude);
 }
 uint8_t svpwm_transform_table[8] ={0,2,6,1,4,3,5,7};						// N编号转化为真实的扇区编号	
 void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty,int32_t u_d_duty)

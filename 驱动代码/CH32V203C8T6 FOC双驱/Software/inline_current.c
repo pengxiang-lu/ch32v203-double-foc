@@ -109,27 +109,27 @@ void current_duty_calculate(foc_struct *foc_p, current_struct*current_p,int32_t 
 	// Q轴和D轴电流计算
 	#if CURRENT_SENSOR_TYPE == SENSOR_A_C	
 	
-	current_p->i_q = -(current_p->i_a*fast_cos(location_temp_a)+current_p->i_c*fast_cos(location_temp_b))/1732;	// 相当于乘2除根号3再除2000*38>>16;
+	current_p->i_q = -(current_p->i_a*fast_cos(location_temp_a)+current_p->i_c*fast_cos(location_temp_b))/866;	// 相当于乘2除根号3再除1000 38>>16;
 	
-	current_p->i_d = -(current_p->i_a*fast_sin(location_temp_a)+current_p->i_c*fast_sin(location_temp_b))/1732;	// 考虑了表的放缩	
+	current_p->i_d = -(current_p->i_a*fast_sin(location_temp_a)+current_p->i_c*fast_sin(location_temp_b))/866;	// 考虑了表的放缩	
 	
 	#elif CURRENT_SENSOR_TYPE == SENSOR_A_B	
 	
-	current_p->i_q = (current_p->i_a*fast_cos(location_temp_c)+current_p->i_b*fast_cos(location_temp_b))/1732;	// 相当于乘2除根号3再除2000*38>>16;
+	current_p->i_q = (current_p->i_a*fast_cos(location_temp_c)+current_p->i_b*fast_cos(location_temp_b))/866;	// 相当于乘2除根号3再除1000 38>>16;
 	
-	current_p->i_d = (current_p->i_a*fast_sin(location_temp_c)+current_p->i_b*fast_sin(location_temp_b))/1732;	// 考虑了表的放缩	
+	current_p->i_d = (current_p->i_a*fast_sin(location_temp_c)+current_p->i_b*fast_sin(location_temp_b))/866;	// 考虑了表的放缩	
 	
 	#elif CURRENT_SENSOR_TYPE == SENSOR_B_C
 
-	current_p->i_q = (current_p->i_b*fast_cos(location_temp_a)-current_p->i_c*fast_cos(location_temp_c))/1732;	// 相当于乘2除根号3再除2000*38>>16;
+	current_p->i_q = (current_p->i_b*fast_cos(location_temp_a)-current_p->i_c*fast_cos(location_temp_c))/866;	// 相当于乘2除根号3再除1000 38>>16;
 	
-	current_p->i_d = (current_p->i_b*fast_sin(location_temp_a)-current_p->i_c*fast_sin(location_temp_c))/1732;	// 考虑了表的放缩	
+	current_p->i_d = (current_p->i_b*fast_sin(location_temp_a)-current_p->i_c*fast_sin(location_temp_c))/866;	// 考虑了表的放缩	
 
 	#elif CURRENT_SENSOR_TYPE == SENSOR_A_B_C	
 	
-	current_p->i_q = (-current_p->i_a*fast_sin(location_temp_b)+current_p->i_b*fast_sin(location_temp_c)+current_p->i_c*fast_sin(location_temp_a))/3000;	// 相当于乘2除根号3再除2000*38>>16;
+	current_p->i_q = (-current_p->i_a*fast_sin(location_temp_b)+current_p->i_b*fast_sin(location_temp_c)+current_p->i_c*fast_sin(location_temp_a))/1500;	// 相当于乘2除根号3再除1000 38>>16;
 	
-	current_p->i_d = (current_p->i_a*fast_cos(location_temp_b)-current_p->i_b*fast_cos(location_temp_c)-current_p->i_c*fast_cos(location_temp_a))/3000;		// 考虑了表的放缩	
+	current_p->i_d = (current_p->i_a*fast_cos(location_temp_b)-current_p->i_b*fast_cos(location_temp_c)-current_p->i_c*fast_cos(location_temp_a))/1500;		// 考虑了表的放缩	
 	
 	#endif
 }

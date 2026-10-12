@@ -72,15 +72,24 @@ int32_t pi_controller(pid_struct * pid_p,int32_t error)
     // P环
     int32_t proportional = (pid_p->p_t * error)>>16;
     // Tustin 散点积分（I环）
-    int32_t integral = pid_p->integral_prev + (pid_p->i_t*(error + pid_p->error_prev)>>17);
-    integral = _constrain(integral, -pid_p->limit, pid_p->limit);
+    // Keep 17 fractional bits, including the Tustin factor of 1/2.
+    int64_t integral_acc = pid_p->integral_acc
+                         + (int64_t)pid_p->i_t * ((int64_t)error + pid_p->error_prev);
+    int64_t integral_limit = (int64_t)pid_p->limit * 131072;
+    if (integral_acc > integral_limit)
+        integral_acc = integral_limit;
+    else if (integral_acc < -integral_limit)
+        integral_acc = -integral_limit;
+
+    // Signed division truncates toward zero for symmetric quantization.
+    int32_t integral = (int32_t)(integral_acc / 131072);
 
     // 将P,I,D三环的计算值加起来
     int32_t output = proportional + integral;
     output = _constrain(output, -pid_p->limit, pid_p->limit);
 
     // 保存值（为了下一次循环）
-	pid_p->integral_prev = integral;
+	pid_p->integral_acc = integral_acc;
     pid_p->error_prev = error;
     return output;
 }
