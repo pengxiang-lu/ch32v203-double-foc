@@ -92,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							VECOCITY_LOOP_MODE
+#define FOC_MODE 							VECOCITY_CURRENT_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -120,7 +120,7 @@
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
 #define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传
-#define  BATTERY_PRINTF					DRIVER_ENABLE				// 电池电压回传
+#define  BATTERY_PRINTF					DRIVER_DISABLE				// 电池电压回传
 // #define  TIME_PRINTF					DRIVER_DISABLE				// 单次执行周期回传
 /**************************** 数据回传 ****************************/
 
@@ -137,14 +137,14 @@
 
 
 /**************************** 堵转保护 ****************************/
-#define MOTOR_LOCKED_PROTECT           DRIVER_DISABLE   // 是否开启堵转保护功能(默认开启)      DRIVER_ENABLE: 开启堵转保护    DRIVER_DISABLE: 不开启堵转保护
-#define MOTOR_LOCKED_DUTY_MAX          (0.2f)          // 堵转检测最大占空比(默认20%)  若超过此值并且电机未旋转 则认为可能堵转
-#define MOTOR_LOCKED_TIME              (500)           // 堵转检测时长(默认500ms)      若认为电机可能堵转 并且持续时长超过此值 则认定为堵转状态
+#define MOTOR_LOCKED_PROTECT           DRIVER_DISABLE    // 是否开启堵转保护功能(默认开启)      DRIVER_ENABLE: 开启堵转保护    DRIVER_DISABLE: 不开启堵转保护
+#define MOTOR_LOCKED_DUTY_MAX          100              // 堵转检测最大占空比(默认20%)  若超过此值并且电机未旋转 则认为可能堵转
+#define MOTOR_LOCKED_TIME              (500)            // 堵转检测时长(默认500ms)      若认为电机可能堵转 并且持续时长超过此值 则认定为堵转状态
 /**************************** 堵转保护 *************************/
 					
 // 限幅配置
-#define MAIN_DUTY_LIMIT             1500                            // 占空比限幅
-#define I_Q_LIMIT                   2000                            // 内环输出i_q最大值限幅
+#define MAIN_DUTY_LIMIT             1500                            // 占空比限幅,单位
+#define I_Q_LIMIT                   2000                            // 内环输出i_q最大值限幅，单位mA
 #define VECOCITY_LIMIT              1000                            // 内环输出速度限幅
 
 

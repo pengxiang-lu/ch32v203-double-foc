@@ -1,26 +1,57 @@
-栅极驱动控制脚：
-PWMAH->PA8
-PWMBH->PA9
-PWMCH->PA10
-PWMAL->PB13
-PWMBL->PB14
-PWMCL->PB15
-编码器引脚：
-CLK->PA5
-DO->PA6
-CS->PA4
+CH32V203C8T6 双电机驱动引脚定义
+依据：本次提供的 CH32V203C8T6TR 原理图。
+说明：L 为左电机，R 为右电机；括号内为芯片封装脚号。
+
+左电机驱动控制脚：
+L_IN1->PB8（45脚，TIM4_CH3，固件 A 相）
+L_IN2->PB7（43脚，TIM4_CH2，固件 B 相）
+L_IN3->PB6（42脚，TIM4_CH1，固件 C 相）
+
+右电机驱动控制脚：
+R_IN1->PA0（10脚，TIM2_CH1，固件 A 相）
+R_IN2->PA1（11脚，TIM2_CH2，固件 B 相）
+R_IN3->PA2（12脚，TIM2_CH3，固件 C 相）
+
+编码器 / SPI2 引脚：
+SCLK->PB13（26脚，两路编码器共用时钟）
+MISO->PB14（27脚，两路编码器共用数据输入）
+MOSI->PB15（28脚，原理图标注的 SPI2 数据输出）
+L_CS->PB12（25脚，左编码器片选）
+R_CS->PB11（22脚，右编码器片选）
+注：当前 MT6701 读取使用 SCLK、MISO 和独立片选。
+
 电流检测脚：
-IA->PA0
-IB->PA1
-IC->PA7
+L_IA->PA3（13脚，ADC1_IN3，左电机 A 相电流）
+L_IC->PA4（14脚，ADC1_IN4，左电机 C 相电流）
+R_IA->PA5（15脚，ADC1_IN5，右电机 A 相电流）
+R_IC->PA6（16脚，ADC1_IN6，右电机 C 相电流）
+
 电源电压测量脚：
-Vin->PA7
-串口引脚：
-TX->PA2
-RX->PA3
+BAT_ADC->PA7（17脚，ADC1_IN7）
+
+串口 / USART1 引脚：
+TX->PA9（30脚，MCU 发送）
+RX->PA10（31脚，MCU 接收）
+
+CAN 引脚（原理图定义）：
+CAN_TX->PA12（33脚）
+CAN_RX->PA11（32脚）
+
 指示灯：
-LED->PC13
-开关：
-KEY->PB12
+L_LED->PC13（2脚，左指示灯）
+R_LED->PB0（18脚，右指示灯）
+
+按键：
+KEY->PA8（29脚）
+
+调试接口：
+SWCLK->PA14（37脚，原理图标注 PA14-SWCLK）
+SWDIO->PA13（34脚，原理图标注 PA13-SWDIO）
+
+外部晶振与复位：
+OSC_IN->PD0（5脚）
+OSC_OUT->PD1（6脚）
+NRST->NRST（7脚）
+
 需要优化的地方：
 编码器读取速度，foc计算效率等。
