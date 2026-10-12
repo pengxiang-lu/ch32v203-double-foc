@@ -39,6 +39,15 @@ extern "C" {
 #endif
 
 
+// 读取持续运行的系统计数器低32位；短时间间隔使用无符号减法处理回绕。
+static inline uint32_t system_tick_get(void)
+{
+    __asm volatile("" ::: "memory");
+    uint32_t ticks = *(volatile uint32_t *)(uintptr_t)&SysTick->CNT;
+    __asm volatile("" ::: "memory");
+    return ticks;
+}
+
 void delay_init(void);
 void delay_us(uint32_t n);
 void delay_ms(uint32_t n);

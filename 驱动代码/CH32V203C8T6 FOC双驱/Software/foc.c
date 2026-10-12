@@ -1,5 +1,6 @@
-?=?,g=I«yf_u|??¹?*.…n(rÁA
-???6ÃwtÅ¨T?'X¯b<€›¸?b?„ZOÃ}¼eÁ¡#Kji§¬?wM)??9E?Ãm??nG­NK/e‚N"%VÀ^[\s†L?5cUts?9p«lfÂEZ0>XÆ·„&´¼uxƒl`n~?( ‡Á8n?.Â€€‹“·x?=f?1:³DQB„H°X&¿?>a0²gÀ¤const int16_t foc_output_array[FOC_ARRAY_LENGTH]={
+#include "foc.h"
+#include "driver_config.h"
+const int16_t foc_output_array[FOC_ARRAY_LENGTH]={
 0,1,3,4,6,7,9,10,12,13,15,16,18,19,21,23,24,26,27,29,30,
 32,33,35,36,38,39,41,42,44,46,47,49,50,52,53,55,56,58,59,61,
 62,64,65,67,68,70,72,73,75,76,78,79,81,82,84,85,87,88,90,91,
@@ -248,7 +249,7 @@ int32_t normalize(int32_t location_temp)
 }
 static uint32_t integer_sqrt(uint64_t n)
 {
-    // Binary integer square root, rounded down; no division or overflow.
+    // ¶ş½øÖÆÕûÊı¿ª·½£¬½á¹ûÏòÏÂÈ¡Õû£»²»Ê¹ÓÃ³ı·¨£¬±ÜÃâÖĞ¼ä½á¹ûÒç³ö¡£
     uint64_t root = 0;
     uint64_t bit = (uint64_t)1 << 62;
     while (bit > n)
@@ -271,7 +272,7 @@ static uint32_t integer_sqrt(uint64_t n)
 }
 void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
 {
-    // Each signed square fits int64_t; their sum may require uint64_t.
+    // µ¥ÖáÆ½·½¿ÉÓÃÓĞ·ûºÅ64Î»ÕûÊı±£´æ£¬Á½ÖáÆ½·½ºÍÊ¹ÓÃÎŞ·ûºÅ64Î»ÕûÊı¡£
     uint64_t magnitude_squared = (uint64_t)((int64_t)u_q_duty * u_q_duty)
                                + (uint64_t)((int64_t)u_d_duty * u_d_duty);
     int64_t limit = MOTOR_DUTY_MAX;
@@ -282,19 +283,19 @@ void circle_limitation(foc_struct *foc_p,int32_t u_q_duty,int32_t u_d_duty)
         return;
     }
 
-    // Round the magnitude up so the scaled vector stays inside the circle.
+    // Ê¸Á¿·ùÖµÏòÉÏÈ¡Õû£¬È·±£Ëõ·ÅºóµÄÊ¸Á¿²»³¬¹ıÔ²ÏŞ·ù±ß½ç¡£
     int64_t magnitude = integer_sqrt(magnitude_squared);
     if ((uint64_t)(magnitude * magnitude) < magnitude_squared)
         ++magnitude;
 
-    // Signed 64-bit division preserves the direction of both axes.
+    // Ê¹ÓÃÓĞ·ûºÅ64Î»³ı·¨£¬±£ÁôÁ½¸öÖáµÄµçÑ¹·½Ïò¡£
     foc_p->u_q = (int32_t)(limit * u_q_duty / magnitude);
     foc_p->u_d = (int32_t)(limit * u_d_duty / magnitude);
 }
-uint8_t svpwm_transform_table[8] ={0,2,6,1,4,3,5,7};						// N±àºÅ×ª»¯ÎªÕæÊµµÄÉÈÇø±àºÅ	
+uint8_t svpwm_transform_table[8] ={0,2,6,1,4,3,5,7};						// N±àºÅ×ª»¯ÎªÕæÊµµÄÉÈÇø±àºÅ
 void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty,int32_t u_d_duty)
 {
-	// ¼ÆËãµç½Ç¶È 
+	// ¼ÆËãµç½Ç¶È
 	foc_p->encoder_el = foc_p->motor_rotation_direction*foc_p->motor_pole_pairs*now_encoder_data-foc_p->motor_zero_location;
 	// ¹éÒ»»¯
 	foc_p->encoder_el = normalize(foc_p->encoder_el);
@@ -312,7 +313,7 @@ void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty
 	location_temp_a = normalize(location_temp_a);
 	location_temp_b = normalize(location_temp_b);
 	location_temp_c = normalize(location_temp_c);	
-	#if	PWM_MODE == SPWM					// SPWMµ÷ÖÆ·½Ê½		
+	#if	PWM_MODE == SPWM					// SPWMµ÷ÖÆ·½Ê½
 	// ÈıÏàÕ¼¿Õ±È¼ÆËã£¬Èı½Ç×Ô´ø¹éÒ»»¯
 	foc_p->u_a = ((foc_p->u_q * fast_sin(location_temp_a) - foc_p->u_d * fast_cos(location_temp_a))>>MOTOR_DUTY_BIT) * ARRAY_TO_OUTPUT_RATIO;
 	foc_p->u_b = ((foc_p->u_q * fast_sin(location_temp_b) - foc_p->u_d * fast_cos(location_temp_b))>>MOTOR_DUTY_BIT) * ARRAY_TO_OUTPUT_RATIO;
@@ -375,12 +376,12 @@ void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty
 		foc_p->svpwm.tx = foc_p->svpwm.ts*foc_p->svpwm.tx/t_sum;
 		foc_p->svpwm.ty = foc_p->svpwm.ts*foc_p->svpwm.ty/t_sum;
 	}
-	#if	PWM_MODE == SVPWM_5			// Èç¹ûÊÇ7¶ÎÊ½SVPWMµ÷ÖÆ
+	#if	PWM_MODE == SVPWM_5			// Èç¹ûÊÇ5¶ÎÊ½SVPWMµ÷ÖÆ
 	// PWM1Ä£Ê½ÏÂµÄµ÷ÖÆ
 	foc_p->svpwm.ta = foc_p->svpwm.ts>>1;							// ¾ÍÊÇÂúÕ¼¿Õ±È
 	foc_p->svpwm.tb = foc_p->svpwm.ta - (foc_p->svpwm.tx>>1); 
 	foc_p->svpwm.tc = foc_p->svpwm.tb - (foc_p->svpwm.ty>>1); 
-	#elif PWM_MODE == SVPWM_7		// Èç¹ûÊÇ5¶ÎÊ½SVPWMµ÷ÖÆ
+	#elif PWM_MODE == SVPWM_7		// Èç¹ûÊÇ7¶ÎÊ½SVPWMµ÷ÖÆ
 	foc_p->svpwm.ta = (foc_p->svpwm.ts + foc_p->svpwm.tx + foc_p->svpwm.ty)>>2;		
 	foc_p->svpwm.tb = foc_p->svpwm.ta - (foc_p->svpwm.tx>>1); 
 	foc_p->svpwm.tc = foc_p->svpwm.tb - (foc_p->svpwm.ty>>1); 
@@ -418,7 +419,7 @@ void foc_calculate(foc_struct *foc_p, int32_t now_encoder_data, int32_t u_q_duty
 		foc_p->output_duty[2] = foc_p->svpwm.tb;
 		break;
         default:
-        // Keep the normal common-mode level for a zero/quantized vector.
+        // ÁãÊ¸Á¿»òÁ¿»¯ÎªÁãÊ±£¬ÈıÏà±£³ÖÏàÍ¬µÄ¹²Ä£µçÆ½¡£
         foc_p->output_duty[0] = foc_p->svpwm.ta;
         foc_p->output_duty[1] = foc_p->svpwm.ta;
         foc_p->output_duty[2] = foc_p->svpwm.ta;

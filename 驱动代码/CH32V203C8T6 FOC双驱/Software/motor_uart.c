@@ -70,9 +70,10 @@ void motor_uart_data_callback()
 	#if BATTERY_PRINTF == DRIVER_ENABLE
 		printf("%d,",(uint32_t)(battery_struct.battery_voltage * 1000));
 	#endif
-//	#if TIME_PRINTF == DRIVER_ENABLE
-//		printf("%d",left_motor.single_calculation_use_time);
-//	#endif
+
+	#if TIME_PRINTF == DRIVER_ENABLE
+		printf("%d,",left_motor.single_calculation_use_time);
+	#endif
 	printf("%d\r\n",0);
 #endif
 }

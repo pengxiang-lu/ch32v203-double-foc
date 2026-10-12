@@ -45,7 +45,7 @@ typedef struct
     encoder_struct						encoder_struct;				// 编码器结构体
     // LED指示灯
     led_struct                          led_struct;                 // LED指示灯
-    int32_t                             single_calculation_use_time;// 软件单次计算耗时     
+    volatile int32_t                             single_calculation_use_time; // TIM1中断主体总耗时，单位为微秒
     // pid参数
 	pid_struct							angle_pid_struct;			// 角度环pid结构体
 	pid_struct   						vecocity_pid_struct;		// 速度环pid结构体

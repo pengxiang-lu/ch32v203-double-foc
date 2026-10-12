@@ -12,8 +12,7 @@
  *******************************************************************************/
 #include "debug.h"
 
-static uint8_t  p_us = 0;
-static uint16_t p_ms = 0;
+static uint32_t p_us = 0;
 
 #define DEBUG_DATA0_ADDRESS  ((volatile uint32_t*)0xE0000380)
 #define DEBUG_DATA1_ADDRESS  ((volatile uint32_t*)0xE0000384)
@@ -27,8 +26,19 @@ static uint16_t p_ms = 0;
  */
 void delay_init(void)
 {
-    p_us = SystemCoreClock / 8000000;
-    p_ms = (uint16_t)p_us * 1000;
+    p_us = SystemCoreClock / 1000000U;
+    // 系统计数器使用HCLK，持续向上计数；不启用中断和自动重装。
+    // 重复初始化只更新换算系数，避免打断正在进行的计时。
+    static uint8_t initialized = 0;
+    if (!initialized)
+    {
+        SysTick->CTLR = 0;
+        SysTick->CNT = 0;
+        SysTick->CMP = ~(uint64_t)0;
+        SysTick->SR = 0;
+        SysTick->CTLR = (1U << 2) | (1U << 0);
+        initialized = 1;
+    }
 }
 
 /*********************************************************************
@@ -42,17 +52,17 @@ void delay_init(void)
  */
 void delay_us(uint32_t n)
 {
-    uint32_t i;
-
-    SysTick->SR &= ~(1 << 0);
-    i = (uint32_t)n * p_us;
-
-    SysTick->CMP = i;
-    SysTick->CTLR |= (1 << 4);
-    SysTick->CTLR |= (1 << 5) | (1 << 0);
-
-    while((SysTick->SR & (1 << 0)) != (1 << 0));
-    SysTick->CTLR &= ~(1 << 0);
+    // 分段等待，避免长延时的乘法溢出；不修改系统计数器状态。
+    while (n != 0U)
+    {
+        uint32_t chunk_us = n > 1000000U ? 1000000U : n;
+        uint32_t ticks = chunk_us * p_us;
+        uint32_t start = system_tick_get();
+        while ((uint32_t)(system_tick_get() - start) < ticks)
+        {
+        }
+        n -= chunk_us;
+    }
 }
 
 /*********************************************************************
@@ -66,17 +76,12 @@ void delay_us(uint32_t n)
  */
 void delay_ms(uint32_t n)
 {
-    uint32_t i;
-
-    SysTick->SR &= ~(1 << 0);
-    i = (uint32_t)n * p_ms;
-
-    SysTick->CMP = i;
-    SysTick->CTLR |= (1 << 4);
-    SysTick->CTLR |= (1 << 5) | (1 << 0);
-
-    while((SysTick->SR & (1 << 0)) != (1 << 0));
-    SysTick->CTLR &= ~(1 << 0);
+    while (n != 0U)
+    {
+        uint32_t chunk_ms = n > 1000U ? 1000U : n;
+        delay_us(chunk_ms * 1000U);
+        n -= chunk_ms;
+    }
 }
 
 /*********************************************************************

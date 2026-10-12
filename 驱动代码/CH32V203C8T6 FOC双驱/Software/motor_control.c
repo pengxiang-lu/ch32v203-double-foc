@@ -430,10 +430,25 @@ void motor_callback(motor_struct * motor_p)
     }
 }
 
+static inline int32_t motor_cycles_to_us(uint32_t cycles)
+{
+    uint32_t cycles_per_us = SystemCoreClock / 1000000U;
+
+    if (cycles_per_us == 0U)
+    {
+        return 0;
+    }
+
+    // 四舍五入为整数微秒，避免使用耗时更长的64位除法。
+    return (int32_t)((cycles + cycles_per_us / 2U) / cycles_per_us);
+}
+
 void TIM1_UP_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 // 定时器1中断服务函数
 void TIM1_UP_IRQHandler(void)
 {
+    uint32_t start_cycles = system_tick_get();
+
     if (TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET)
     {
         TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
@@ -449,7 +464,7 @@ void TIM1_UP_IRQHandler(void)
 #if RIGHT_MOTOR_STATE == DRIVER_ENABLE
             right_motor.motor_set_duty(0, 0, 0);
 #endif
-            return;
+            goto calculation_finished;
         }
 #else
         (void)frame_ready;
@@ -460,5 +475,21 @@ void TIM1_UP_IRQHandler(void)
 #if RIGHT_MOTOR_STATE == DRIVER_ENABLE
         motor_callback(&right_motor);
 #endif
+    }
+
+#ifdef FOC_MODE_WITH_CURRENT
+calculation_finished:
+#endif
+    {
+        uint32_t used_cycles = system_tick_get() - start_cycles;
+        int32_t used_time_us = motor_cycles_to_us(used_cycles);
+
+#if LEFT_MOTOR_STATE == DRIVER_ENABLE
+        left_motor.single_calculation_use_time = used_time_us;
+#endif
+#if RIGHT_MOTOR_STATE == DRIVER_ENABLE
+        right_motor.single_calculation_use_time = used_time_us;
+#endif
+        (void)used_time_us;
     }
 }
