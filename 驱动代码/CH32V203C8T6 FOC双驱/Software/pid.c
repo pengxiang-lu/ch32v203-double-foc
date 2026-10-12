@@ -41,7 +41,7 @@
 #elif FOC_MODE == ANGLE_CURRENT_LOOP_MODE
 
 // 角度环参数
-#define LEFT_ANGLE_KP               0.2                 //Kp
+#define LEFT_ANGLE_KP               0.6                 //Kp
 // 电流环Q轴参数
 #define LEFT_I_Q_KP                 0.002               //Kp
 #define LEFT_I_Q_KI                 0.004               //Ki
@@ -51,7 +51,7 @@
 
 #elif FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE
 // 角度环参数
-#define LEFT_ANGLE_KP               0.2                 //Kp
+#define LEFT_ANGLE_KP               0.1                 //Kp
 // 速度环参数
 #define LEFT_VELOCITY_KP            2.0                 //Kp
 #define LEFT_VELOCITY_KI            0.08                //Ki

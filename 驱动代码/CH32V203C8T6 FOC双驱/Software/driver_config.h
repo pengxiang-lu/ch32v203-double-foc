@@ -92,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							ANGLE_VECOCITY_CURRENT_LOOP_MODE
+#define FOC_MODE 							VECOCITY_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -143,9 +143,9 @@
 /**************************** 堵转保护 *************************/
 					
 // 限幅配置
-#define MAIN_DUTY_LIMIT             3000                            // 占空比限幅
-#define I_Q_LIMIT                   4000                            // 内环输出i_q最大值限幅
-#define VECOCITY_LIMIT              2000                            // 内环输出速度限幅
+#define MAIN_DUTY_LIMIT             1500                            // 占空比限幅
+#define I_Q_LIMIT                   2000                            // 内环输出i_q最大值限幅
+#define VECOCITY_LIMIT              1000                            // 内环输出速度限幅
 
 
 
