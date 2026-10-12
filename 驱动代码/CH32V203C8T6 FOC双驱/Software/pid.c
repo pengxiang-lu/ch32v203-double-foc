@@ -41,8 +41,8 @@
 #elif FOC_MODE == ANGLE_CURRENT_LOOP_MODE
 
 // 角度环参数：Kp 单位为 mA/编码器计数，Kd 单位为 mA/RPM
-#define LEFT_ANGLE_KP               1.2                 // 比例系数
-#define LEFT_ANGLE_KD               0.6                 // 速度阻尼系数
+#define LEFT_ANGLE_KP               2.2                 // 比例系数
+#define LEFT_ANGLE_KD               5.0                 // 速度阻尼系数
 // 电流环Q轴参数
 #define LEFT_I_Q_KP                 0.002               //Kp
 #define LEFT_I_Q_KI                 0.004               //Ki
@@ -52,9 +52,9 @@
 
 #elif FOC_MODE == ANGLE_VECOCITY_CURRENT_LOOP_MODE
 // 角度环参数
-#define LEFT_ANGLE_KP               0.1                 //Kp
+#define LEFT_ANGLE_KP               0.3                 //Kp
 // 速度环参数
-#define LEFT_VELOCITY_KP            2.0                 //Kp
+#define LEFT_VELOCITY_KP            6.0                 //Kp
 #define LEFT_VELOCITY_KI            0.08                //Ki
 // 电流环Q轴参数
 #define LEFT_I_Q_KP                 0.002               //Kp

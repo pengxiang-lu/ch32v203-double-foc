@@ -92,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							ANGLE_CURRENT_LOOP_MODE
+#define FOC_MODE 							ANGLE_VECOCITY_CURRENT_LOOP_MODE
 
 // 调制模式
 #define SPWM								(0)
@@ -115,8 +115,8 @@
 /**************************** 数据回传 ****************************/
 #define  DATA_PRINTF					DRIVER_ENABLE				// 回传数据总使能开关
 
-#define  ANGLE_PRINTF				    DRIVER_DISABLE				// 磁编数据回传
-#define  VECOCITY_PRINTF				DRIVER_ENABLE 				// 回传速度
+#define  ANGLE_PRINTF				    DRIVER_ENABLE				// 磁编数据回传
+#define  VECOCITY_PRINTF				DRIVER_DISABLE 				// 回传速度
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
 #define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传
