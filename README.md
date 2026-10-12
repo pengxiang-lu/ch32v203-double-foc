@@ -2,9 +2,43 @@
 
 <img src="README.assets/image-20261008102334351.png" alt="image-20261008102334351" style="zoom:44%;" /><img src="README.assets/image-20261008102319128.png" alt="image-20261008102319128" style="zoom:49%;" />
 
+## 工程结构
+
+工程结构如下：
+
+```bash
+驱动代码/CH32V203C8T6 FOC双驱/
+├── Core/                 RISC-V 核心支持
+├── Debug/                WCH 调试/串口打印支持
+├── Hardware/             ADC、GPIO、PWM、串口、MT6701、定时器等驱动
+├── Ld/                   链接脚本
+├── Peripheral/           CH32V20x 外设库
+├── Software/             FOC、电机控制、PID、协议、电流与电池模块
+├── Startup/              启动文件
+├── User/                 main 与中断入口
+├── Double_FOC.wvproj     MounRiver Studio 工程
+├── Double_FOC.launch     OpenOCD 调试启动配置
+├── 引脚定义.txt          引脚说明（使用前请核对已知冲突）
+└── 通讯格式.txt          串口协议说明
+
+硬件原理图和PCB/          PCB 工程文件
+```
+
 ## 硬件电路
 
+下面放出PCB的图片：
+
 <img src="C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20261012175241115.png" alt="image-20261012175241115" style="zoom: 40%;" /><img src="C:\Users\Lenovo\AppData\Roaming\Typora\typora-user-images\image-20261012175301997.png" alt="image-20261012175301997" style="zoom: 40%;" />
+
+本次的硬件选型和传统的FOC略有不同，传统的栅极驱动是FD6288，本工程选择了EG2133，这样做的好处是不需要高级定时器的互补输出就可以用一个定时器PWM输出控制上下桥两个MOS管，节省引脚数量并且不用高级定时器。然后MOS管使用了二N合一管，减少了焊接难度，一路驱动只要焊接3个MOS。支持的额定输入电压是12V，实际支持4.5V~17V的输入电压。
+
+双电机编码器板子：
+
+<img src="README.assets/image-20261012191301012.png" alt="image-20261012191301012" style="zoom:50%;" />
+
+电机选型是新西达2212电机：
+
+<img src="README.assets/电机尺寸图.jpg" alt="电机尺寸图" style="zoom:50%;" />
 
 ## 功能概览
 
@@ -32,55 +66,52 @@
 
 ## 串口协议
 
-串口参数：460800 baud、8 数据位、无校验、1 停止位（8-N-1）。二进制控制帧固定为 6 字节：
+串口参数：460800 baud、8 数据位、无校验、1 停止位（8-N-1）。控制帧为二进制格式，固定 6 字节：
 
 | 字节 | 内容 |
 | --- | --- |
 | 0 | 帧头 `0xA5` |
-| 1-2 | 左电机有符号 16 位目标值，高字节在前 |
-| 3-4 | 右电机有符号 16 位目标值，高字节在前 |
-| 5 | 校验和：前 5 字节相加后保留低 8 位 |
+| 1-2 | 左电机目标值，有符号 16 位二进制补码，高字节在前 |
+| 3-4 | 右电机目标值，有符号 16 位二进制补码，高字节在前 |
+| 5 | 校验和：字节 0 至 4 相加后保留低 8 位 |
 
-示例：默认速度闭环下，左电机目标 `+1000 RPM`、右电机目标 `-1000 RPM`：
+接收端校验帧头和校验和；校验失败时丢弃一个字节，再继续搜索有效帧。两个目标值的解释由 `driver_config.h` 中的 `FOC_MODE` 决定：
+
+| 模式 | 目标值含义 |
+| --- | --- |
+| `OPEN_LOOP_MODE` | 有符号占空比指令，源码直接写入 `u_q_duty`；工程注释约定 0-10000 对应 0-100%，实际输出还受调制及限幅影响 |
+| `VECOCITY_LOOP_MODE`、`VECOCITY_CURRENT_LOOP_MODE` | 速度，单位 RPM；速度目标受 `VECOCITY_LIMIT` 限幅 |
+| `ANGLE_LOOP_MODE`、`ANGLE_VECOCITY_LOOP_MODE`、`ANGLE_CURRENT_LOOP_MODE`、`ANGLE_VECOCITY_CURRENT_LOOP_MODE` | 磁编码器角度计数。14 位编码器一圈为 0-16383 |
+| `I_Q_LOOP_MODE` | q 轴电流，单位 mA |
+| `I_D_LOOP_MODE` | d 轴电流，单位 mA |
+
+每个目标字段范围为有符号 16 位整数（-32768 至 32767）。例如，速度模式下左电机目标 `+1000 RPM`、右电机目标 `-1000 RPM`：
 
 ```text
 A5 03 E8 FC 18 A4
 ```
 
-目标值含义取决于 `FOC_MODE`：开环模式是有符号占空比指令（文档约定 0-10000 对应 0-100%）；速度模式单位为 RPM；角度模式单位为编码器计数。源码默认 `FOC_MODE` 为速度环。
+电流目标同样使用 mA，例如 `1000` 表示 `1 A`。当前串口解析对纯 `I_Q_LOOP_MODE`、`I_D_LOOP_MODE` 目标没有额外的目标值限幅；使用时应自行保证指令处于电机和驱动器允许范围内。
 
-当前默认启用速度数据回传。回传字段由 `DATA_PRINTF`、`VECOCITY_PRINTF`、`ANGLE_PRINTF` 等宏控制；默认输出左右电机滤波速度以及结束字段 `0`，并以逗号分隔、CRLF 结尾。输出由 TIM3 中断调用，源码注释目标周期为 1 ms。切换回传字段后，上位机解析格式也要同步调整。
+数据回传为 ASCII 文本，以逗号分隔、CRLF 结尾；字段按以下顺序输出，关闭的项目不占字段：角度、滤波速度、传感器原始电流 `i_a/i_c`、`u_q_duty`、滤波 `i_q/i_d`、电池电压。开关分别为 `DATA_PRINTF` 总开关，以及 `ANGLE_PRINTF`、`VECOCITY_PRINTF`、`CURRENT_SENSOR_PRINTF`、`U_Q_PRINTF`、`I_Q_I_D_PRINTF`、`BATTERY_PRINTF`。
 
-## 工程结构
-
-```text
-驱动代码/CH32V203C8T6 FOC双驱/
-├── Core/                 RISC-V 核心支持
-├── Debug/                WCH 调试/串口打印支持
-├── Hardware/             ADC、GPIO、PWM、串口、MT6701、定时器等驱动
-├── Ld/                   链接脚本
-├── Peripheral/           CH32V20x 外设库
-├── Software/             FOC、电机控制、PID、协议、电流与电池模块
-├── Startup/              启动文件
-├── User/                 main 与中断入口
-├── Double_FOC.wvproj     MounRiver Studio 工程
-├── Double_FOC.launch     OpenOCD 调试启动配置
-├── 引脚定义.txt          引脚说明（使用前请核对已知冲突）
-└── 通讯格式.txt          串口协议说明
-
-硬件原理图和PCB/          PCB 工程文件
-```
+当前工程默认仅启用左电机，回传角度和滤波 `i_q/i_d`，因此默认每行字段为：`左电机角度,左电机i_q,左电机i_d,0`。角度单位为编码器计数，电流单位为 mA；电池回传值（启用 `BATTERY_PRINTF` 时）为电压乘以 1000，即 mV。末尾的 `0` 是固定结束字段。回传由 TIM3 中断调用，周期配置目标为 1 ms。修改电机使能或回传宏后，字段数量和顺序会变化，上位机解析也要同步调整。
 
 ## 使用方法
-安装与该工程兼容的 MounRiver Studio（工程生成文件标记 MRS 1.9.2）。在 MounRiver Studio 中导入 `驱动代码/CH32V203C8T6 FOC双驱/Double_FOC.wvproj`，编译下载代码（烧录设置不能设置为全片擦除）。第一次使用的时候(这时候芯片flash里面没东西)记得在driver_config.h里面把FIRST_USE改为YES，烧录程序(烧录程序配置不能设置为全片擦除),然后再把FIRST_USE改为NO后再烧录回去即可。
 
-按下KEY按钮进行校正，可以配合串口查看打印输出是否正确。
+安装好电机之后，接上编码器，上电观察输出电压和电源指示灯是否正常。测试能否烧录。
 
-然后再driver_config.h里面选择自己想要运行的模式和配置的电机参数(使用电流环一定要使能电流传感器)。编译后烧录代码。
+该无刷驱动的使用方法如下：
 
-上电后按RESET（如果出现异常的话）。可以在上电的时候烧录，但是建议按下RESET让电机停止后烧录。
+1. 安装与该工程兼容的 MounRiver Studio（工程生成文件标记 MRS 1.9.2）。在 MounRiver Studio 中导入 `驱动代码/CH32V203C8T6 FOC双驱/Double_FOC.wvproj`，编译下载代码（烧录设置不能设置为全片擦除）。第一次使用的时候(这时候芯片flash里面没东西)记得在driver_config.h里面把FIRST_USE改为YES，烧录程序(烧录程序配置不能设置为全片擦除),然后再把FIRST_USE改为NO后再烧录回去即可。
 
-观察电机运行效果，可以配合串口数据进行调试，调参。
+2. 按下KEY按钮进行校正，可以配合串口查看打印输出是否正确。
+
+3. 然后再driver_config.h里面选择自己想要运行的模式和配置的电机参数(使用电流环一定要使能电流传感器)。编译后烧录代码。
+
+4. 上电后按RESET（如果出现异常的话）。可以在上电的时候烧录，但是建议按下RESET让电机停止后烧录。
+
+5. 观察电机运行效果，可以配合串口数据进行调试，调参。
 
 ## AI辅助发现的原有代码错误
 
