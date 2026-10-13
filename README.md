@@ -36,7 +36,7 @@
 
 <img src="README.assets/image-20261012191301012.png" alt="image-20261012191301012" style="zoom:50%;" />
 
-电机选型是新西达2212电机：
+电机选型是新西达A2212电机：
 
 <img src="README.assets/电机尺寸图.jpg" alt="电机尺寸图" style="zoom:50%;" />
 

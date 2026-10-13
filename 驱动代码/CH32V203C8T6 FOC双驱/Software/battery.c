@@ -33,18 +33,6 @@ protect_enum battery_check(battery_value_struct * battery_p)
     return ERROR_STATE;
 }
 
-// ADC采集附带均值滤波
-uint16_t battery_read_adc_value(battery_value_struct * battery_p,uint8_t n)
-{
-    uint32_t sum = 0;
-    for(uint8_t i = 0;i < n;i++)
-    {
-        sum += battery_p->battery_adc_read();
-    }
-
-    // 返回转换结果
-    return sum/n;
-}
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     驱动的 ADC循环检测函数
 // 参数说明     void
@@ -54,7 +42,7 @@ uint16_t battery_read_adc_value(battery_value_struct * battery_p,uint8_t n)
 //-------------------------------------------------------------------------------------------------------------------
 void battery_adc_loop(battery_value_struct * battery_p)
 {
-    uint16_t adc_data = battery_read_adc_value(battery_p, 10);
+    uint16_t adc_data = battery_p->battery_adc_read();
     float voltage = adc_data * CONVERSION_COEFFICIENT * BATTERY_RECTIFY_COEFFICIENT;
 
     if (!battery_p->voltage_filter_initialized)
