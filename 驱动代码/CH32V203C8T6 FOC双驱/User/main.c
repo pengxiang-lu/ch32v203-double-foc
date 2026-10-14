@@ -24,13 +24,10 @@ int main(void)
     interrupt_global_enable();                  // 开启所有中断
 
 #if WATCH_DOG == DRIVER_ENABLE                  // 如果使能了看门狗
-    watch_dog_init(781);                        // 5秒喂狗时间
+    watch_dog_init(WATCH_DOG_RELOAD_5S);                        // 5秒喂狗时间
 #endif
     while(1)
     {
-#if WATCH_DOG == DRIVER_ENABLE
-        feed_dog();
-#endif
         delay_ms(DRIVER_RESPONSE_CYCLE);        // 延时操作
         key_scan();                             // 扫描按键
         battery_adc_loop(&battery_struct);                     // 电池电压检测主循环
@@ -44,5 +41,8 @@ int main(void)
 #endif
 
 
+#if WATCH_DOG == DRIVER_ENABLE
+        feed_dog();
+#endif
     }
 }

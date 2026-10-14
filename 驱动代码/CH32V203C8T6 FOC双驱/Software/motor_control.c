@@ -121,6 +121,10 @@ void motor_phase_check(motor_struct * motor_p)
 void motor_zero_calibration(motor_struct * motor_p)
 {        
     int32_t  encoder_data_integral = 0;
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     interrupt_global_disable();                 // 关闭所有中断
 
     if(motor_p->motor_speed_filter != 0)      // 如果电机正在旋转 则刹车
@@ -128,10 +132,18 @@ void motor_zero_calibration(motor_struct * motor_p)
         motor_p->motor_set_duty(0, 0, 0);                                           // 左侧电机刹车
                                         
         delay_ms(1000);                                                             // 刹车等待
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     }
     motor_p->encoder_struct.magnetic_encoder_init();                                // 初始化相应的编码器
 
     motor_phase_check(motor_p);                                                     // 三相 MOS 及 预驱 功能检测 由于没有检测三相电流 因此需要人为判断是否响三声
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     
     motor_p->motor_output_init(PWM_PRIOD_LOAD);                                     // 左侧三相 PWM 输出重新初始化
     
@@ -150,6 +162,10 @@ void motor_zero_calibration(motor_struct * motor_p)
     
     // 延时 200ms 等待电机回到零点
     delay_ms(1000); 
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     // Uq > 0 at electrical angle 0 aligns the rotor to +90 electrical degrees.
     // Keep the raw mechanical reading until direction and pole pairs are known.
     motor_p->zero_location = encoder_get_absolute_data(&motor_p->encoder_struct);
@@ -174,6 +190,10 @@ void motor_zero_calibration(motor_struct * motor_p)
         encoder_get_absolute_data(&motor_p->encoder_struct);// 获取当前磁编码器数值
         // Accumulate signed displacement; its sign determines sensor direction.
         encoder_data_integral += motor_p->encoder_struct.encoder_value_offset;
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     }                                                               
        
     
@@ -222,6 +242,10 @@ void motor_zero_calibration(motor_struct * motor_p)
 
     }
     delay_ms(1000);
+
+#if WATCH_DOG == DRIVER_ENABLE
+    watch_dog_calibration_progress();
+#endif
     interrupt_global_enable();              //开启所有中断
 }
 //-------------------------------------------------------------------------------------------------------------------
@@ -481,6 +505,9 @@ void TIM1_UP_IRQHandler(void)
 #endif
 #if RIGHT_MOTOR_STATE == DRIVER_ENABLE
         motor_callback(&right_motor);
+#endif
+#if WATCH_DOG == DRIVER_ENABLE
+        watch_dog_control_progress();
 #endif
     }
 
