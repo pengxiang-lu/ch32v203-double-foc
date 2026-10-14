@@ -48,13 +48,22 @@
 #define PWM_6						(1)								// 6PWM模式
 #define PRE_DRIVER_MODE				PWM_3							// 栅极驱动模式
 // 使用配置
+// Motion feedback sign: positive control output must produce positive speed.
+// -1 preserves the currently tested raw-encoder inversion. Verify each motor.
+#define LEFT_FEEDBACK_DIRECTION        (-1)
+#define RIGHT_FEEDBACK_DIRECTION       (-1)
+#if ((LEFT_FEEDBACK_DIRECTION != 1) && (LEFT_FEEDBACK_DIRECTION != -1)) || \
+    ((RIGHT_FEEDBACK_DIRECTION != 1) && (RIGHT_FEEDBACK_DIRECTION != -1))
+#error "Feedback direction must be +1 or -1"
+#endif
+
 #define FIRST_USE                   NO                              // 是否第一次使用，并且烧录时不能擦除所有flash
 #define WATCH_DOG                   DRIVER_DISABLE                  // 看门狗使能，时间5s
 /**************************** 电机配置 ****************************/
 
 /************************* 电流传感器配置 *************************/
 // 采样基本参数配置
-#define CURRENT_SENSOR						DRIVER_DISABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
+#define CURRENT_SENSOR						DRIVER_ENABLE	// 是否有电流传感器，如果有可以选择使能，会初始化传感器和测量电流
 #define SHUNT_RESISTER						0.01			// 分流电阻,单位为Ω
 #define GAIN								20				// 放大倍数
 #define ADC_REF_VOLTAGE 					3.3           	// ADC电压,单位为V
@@ -94,6 +103,8 @@
 
 #define FOC_MODE 							VECOCITY_LOOP_MODE
 
+
+
 // 调制模式
 #define SPWM								(0)
 #define SVPWM_7								(1)
@@ -115,8 +126,8 @@
 /**************************** 数据回传 ****************************/
 #define  DATA_PRINTF					DRIVER_ENABLE				// 回传数据总使能开关
 
-#define  ANGLE_PRINTF				    DRIVER_ENABLE				// 磁编数据回传
-#define  VECOCITY_PRINTF				DRIVER_DISABLE 				// 回传速度
+#define  ANGLE_PRINTF				    DRIVER_DISABLE				// 磁编数据回传
+#define  VECOCITY_PRINTF				DRIVER_ENABLE 				// 回传速度
 #define  CURRENT_SENSOR_PRINTF			DRIVER_DISABLE				// 传感器电流原始数据回传
 #define  U_Q_PRINTF						DRIVER_DISABLE				// U_Q回传
 #define  I_Q_I_D_PRINTF					DRIVER_ENABLE				// i_q,i_d数据回传

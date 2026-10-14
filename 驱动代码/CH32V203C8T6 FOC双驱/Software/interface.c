@@ -8,6 +8,7 @@ void interface_init()
 	left_motor.motor_set_duty	 = left_motor_duty_set;
 	left_motor.motor_output_init = left_motor_output_init;
 	left_motor.motor_name        = "left_motor";
+    left_motor.feedback_direction = LEFT_FEEDBACK_DIRECTION;
 	// 编码器相关的底层函数
 	left_motor.encoder_struct.magnetic_encoder_init   = MT6701_Init;
 	left_motor.encoder_struct.magnetic_encoder_read   = L_MT6701_GetRawAngle;
@@ -28,6 +29,7 @@ void interface_init()
     right_motor.motor_set_duty    = right_motor_duty_set;
     right_motor.motor_output_init = right_motor_output_init;
     right_motor.motor_name        = "right_motor";
+    right_motor.feedback_direction = RIGHT_FEEDBACK_DIRECTION;
     // 编码器相关的底层函数
     right_motor.encoder_struct.magnetic_encoder_init   = MT6701_Init;
     right_motor.encoder_struct.magnetic_encoder_read   = R_MT6701_GetRawAngle;

@@ -269,7 +269,7 @@ void motor_foc_control_init(motor_struct * motor_p)
 
 	#endif
 	
-	motor_p->motor_angle =  motor_p->rotation_direction * encoder_get_absolute_data(&motor_p->encoder_struct);
+	motor_p->motor_angle = motor_p->feedback_direction * encoder_get_absolute_data(&motor_p->encoder_struct);
 }
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
@@ -310,7 +310,7 @@ static void motor_update_speed_observe(motor_struct * motor_p)
 
     motor_p->speed_observe_count = 0;
     // 位置和速度使用相同的机械方向定义。
-    int32_t angle_delta = motor_p->rotation_direction
+    int32_t angle_delta = motor_p->feedback_direction
                         * motor_p->encoder_struct.encoder_offset_integral;
     // 使用实际整数分频后的观测周期，即 20000/3，而不是标称的 6000Hz。
     // 低速附近在低通滤波内部保留 RPM 小数。
