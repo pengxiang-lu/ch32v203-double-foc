@@ -23,8 +23,6 @@ typedef struct
 {
     int16_t                             zero_location;              // 电机零点位置
     int16_t                             rotation_direction;         // 磁编与相位输出方向
-    // Raw encoder -> motion feedback sign; independent of FOC calibration.
-    int16_t                             feedback_direction;
     int16_t                             pole_pairs;                 // 电机极对数
     char *                              motor_name;                 // 电机名
     // 开环参数

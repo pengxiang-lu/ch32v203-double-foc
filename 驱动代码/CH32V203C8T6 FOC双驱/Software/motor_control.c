@@ -120,7 +120,6 @@ void motor_phase_check(motor_struct * motor_p)
 
 void motor_zero_calibration(motor_struct * motor_p)
 {        
-    int16_t  rotation_direction = 0;
     int32_t  encoder_data_integral = 0;
     interrupt_global_disable();                 // 关闭所有中断
 
@@ -151,7 +150,9 @@ void motor_zero_calibration(motor_struct * motor_p)
     
     // 延时 200ms 等待电机回到零点
     delay_ms(1000); 
-    motor_p->zero_location = encoder_get_absolute_data(&motor_p->encoder_struct)-ENCODER_PRECISION/4;
+    // Uq > 0 at electrical angle 0 aligns the rotor to +90 electrical degrees.
+    // Keep the raw mechanical reading until direction and pole pairs are known.
+    motor_p->zero_location = encoder_get_absolute_data(&motor_p->encoder_struct);
 
     // 读取当前磁编数据
     encoder_get_absolute_data(&motor_p->encoder_struct);  
@@ -171,17 +172,7 @@ void motor_zero_calibration(motor_struct * motor_p)
         delay_ms(5);  
 
         encoder_get_absolute_data(&motor_p->encoder_struct);// 获取当前磁编码器数值
-        // 累计单次牵引的旋转方向
-        if(motor_p->encoder_struct.encoder_value_offset > 0)
-        {
-            rotation_direction ++;
-        }
-        else if(motor_p->encoder_struct.encoder_value_offset < 0)
-        {
-            rotation_direction --;
-        }
-        
-        // 累积单次牵引的旋转数值
+        // Accumulate signed displacement; its sign determines sensor direction.
         encoder_data_integral += motor_p->encoder_struct.encoder_value_offset;
     }                                                               
        
@@ -209,14 +200,16 @@ void motor_zero_calibration(motor_struct * motor_p)
         motor_p->led_struct.encoder_state = NORMAL_STATE;
         
         // 旋转方向归一化 正转则为 1  反转则为 -1
-        motor_p->rotation_direction = rotation_direction / (rotation_direction > 0 ? rotation_direction : -rotation_direction);
+        motor_p->rotation_direction = encoder_data_integral > 0 ? 1 : -1;
         
         // 计算极对数  磁编最大值 除以 单圈电角度积分值 四舍五入
-        motor_p->pole_pairs = (int16_t)round(ENCODER_OUTPUT_MAX/encoder_data_integral*motor_p->rotation_direction);
+        motor_p->pole_pairs = (int16_t)((ENCODER_OUTPUT_MAX
+            + func_abs(encoder_data_integral) / 2) / func_abs(encoder_data_integral));
 
-        motor_p->zero_location = motor_p->rotation_direction*motor_p->pole_pairs*motor_p->zero_location%ENCODER_PRECISION;
-        
-        motor_p->zero_location = motor_p->zero_location>0?motor_p->zero_location:motor_p->zero_location+ENCODER_PRECISION;
+        // Subtract 90 ELECTRICAL degrees after the mechanical-to-electrical conversion.
+        motor_p->zero_location = normalize(
+            (int32_t)motor_p->rotation_direction * motor_p->pole_pairs
+            * motor_p->zero_location - ENCODER_PRECISION / 4);
         // 按照计算的数据重新初始化fast_foc参数
         foc_init(&motor_p->foc_cal_struct,motor_p->pole_pairs, motor_p->zero_location, motor_p->rotation_direction);
         // 成功初始化电机指示
@@ -269,7 +262,7 @@ void motor_foc_control_init(motor_struct * motor_p)
 
 	#endif
 	
-	motor_p->motor_angle = motor_p->feedback_direction * encoder_get_absolute_data(&motor_p->encoder_struct);
+	motor_p->motor_angle = motor_p->rotation_direction * encoder_get_absolute_data(&motor_p->encoder_struct);
 }
 #define VECOCITY_OB_COUNT			(F_OPEN / F_VECOCITY_OB)
 #define VECOCITY_LOOP_COUNT			(F_OPEN / F_VECOCITY)
@@ -310,7 +303,7 @@ static void motor_update_speed_observe(motor_struct * motor_p)
 
     motor_p->speed_observe_count = 0;
     // 位置和速度使用相同的机械方向定义。
-    int32_t angle_delta = motor_p->feedback_direction
+    int32_t angle_delta = motor_p->rotation_direction
                         * motor_p->encoder_struct.encoder_offset_integral;
     // 使用实际整数分频后的观测周期，即 20000/3，而不是标称的 6000Hz。
     // 低速附近在低通滤波内部保留 RPM 小数。

@@ -48,15 +48,6 @@
 #define PWM_6						(1)								// 6PWM模式
 #define PRE_DRIVER_MODE				PWM_3							// 栅极驱动模式
 // 使用配置
-// Motion feedback sign: positive control output must produce positive speed.
-// -1 preserves the currently tested raw-encoder inversion. Verify each motor.
-#define LEFT_FEEDBACK_DIRECTION        (-1)
-#define RIGHT_FEEDBACK_DIRECTION       (-1)
-#if ((LEFT_FEEDBACK_DIRECTION != 1) && (LEFT_FEEDBACK_DIRECTION != -1)) || \
-    ((RIGHT_FEEDBACK_DIRECTION != 1) && (RIGHT_FEEDBACK_DIRECTION != -1))
-#error "Feedback direction must be +1 or -1"
-#endif
-
 #define FIRST_USE                   NO                              // 是否第一次使用，并且烧录时不能擦除所有flash
 #define WATCH_DOG                   DRIVER_DISABLE                  // 看门狗使能，时间5s
 /**************************** 电机配置 ****************************/
@@ -101,7 +92,7 @@
 #define ANGLE_CURRENT_LOOP_MODE				(7)				// 角度环串 电流环模式
 #define ANGLE_VECOCITY_CURRENT_LOOP_MODE	(8)				// 角度环串 速度环串 电流环模式
 
-#define FOC_MODE 							VECOCITY_LOOP_MODE
+#define FOC_MODE 							VECOCITY_CURRENT_LOOP_MODE
 
 
 
