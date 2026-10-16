@@ -154,7 +154,7 @@ void motor_zero_calibration(motor_struct * motor_p)
     foc_init(&motor_p->foc_cal_struct,1, 0, 1);
     
     // 开环定位 20% 占空比
-    foc_calculate(&motor_p->foc_cal_struct, 0,500,0);
+    foc_calculate(&motor_p->foc_cal_struct, 0,200,0);
     // 输出占空比到电机
     motor_p->motor_set_duty( motor_p->foc_cal_struct.output_duty[0], 
                     motor_p->foc_cal_struct.output_duty[1],
@@ -177,7 +177,7 @@ void motor_zero_calibration(motor_struct * motor_p)
     for(uint16_t i = 0; i <= 100; i ++)                                                                         
     {
         // 以 10% 占空比循环牵引
-        foc_calculate(&motor_p->foc_cal_struct,ENCODER_OUTPUT_MAX*i/100,500,0);
+        foc_calculate(&motor_p->foc_cal_struct,ENCODER_OUTPUT_MAX*i/100,200,0);
         
         // 输出占空比到电机
         motor_p->motor_set_duty( motor_p->foc_cal_struct.output_duty[0], 
