@@ -142,7 +142,7 @@ void motor_callback_init()
     // 配置 TIM1 更新中断
     NVIC_initStructure.NVIC_IRQChannel = TIM1_UP_IRQn;  // 选择 TIM1 更新中断通道
     NVIC_initStructure.NVIC_IRQChannelCmd = ENABLE;  // 使能中断通道
-    NVIC_initStructure.NVIC_IRQChannelPreemptionPriority = 0;  // 最高抢占优先级，避免控制环被低优先级任务阻塞
+    NVIC_initStructure.NVIC_IRQChannelPreemptionPriority = 1;  // 最高抢占优先级，避免控制环被低优先级任务阻塞
     NVIC_initStructure.NVIC_IRQChannelSubPriority = 0;  // 子优先级为 0
     NVIC_Init(&NVIC_initStructure);
     // TIM1 更新中断配置完成
